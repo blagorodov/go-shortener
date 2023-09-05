@@ -15,7 +15,7 @@ var links Links
 func main() {
 	links = make(Links)
 	http.HandleFunc(`/`, handleRoot)
-	if err := http.ListenAndServe(`:8889`, nil); err != nil {
+	if err := http.ListenAndServe(`:8080`, nil); err != nil {
 		panic(err)
 	}
 }
