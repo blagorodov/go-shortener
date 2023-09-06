@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
@@ -15,11 +14,12 @@ var links Links
 func main() {
 	links = make(Links)
 	http.HandleFunc(`/`, handleRoot)
-	if err := http.ListenAndServe(`:8080`, nil); err != nil {
+	if err := http.ListenAndServe(`:8889`, nil); err != nil {
 		panic(err)
 	}
 }
 
+// Обработчик /
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		handlePost(w, r)
@@ -29,49 +29,61 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Обработчик всех POST /
 func handlePost(w http.ResponseWriter, r *http.Request) {
-	body := readBody(r)
-	fmt.Println(body)
-
-	var key string
-	for {
-		key = generateKey()
-		if _, exists := links[key]; !exists {
-			break
-		}
+	url, ok := doPost(r)
+	if !ok {
+		w.WriteHeader(400)
+		return
 	}
 
-	links[key] = body
-	parts := []string{`http:/`, r.Host, key}
-	result := strings.Join(parts, `/`)
-
 	w.WriteHeader(201)
-	_, err := w.Write([]byte(result))
+	_, err := w.Write([]byte(url))
 	if err != nil {
 		return
 	}
-	fmt.Println(key, body)
 }
 
+// Обработчик всех GET /
 func handleGet(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.String(), `/`)
-	if len(parts) != 2 {
-		w.WriteHeader(404)
-		return
-	}
-	key := parts[1]
-	url, ok := links[key]
+	url, ok := doGet(r)
 	if !ok {
-		w.WriteHeader(404)
+		w.WriteHeader(400)
 		return
 	}
-
 	w.Header().Set(`Location`, url)
 	w.WriteHeader(307)
-
-	fmt.Println(url)
 }
 
+// Контроллер GET /
+func doGet(r *http.Request) (string, bool) {
+	var url string
+	ok := false
+	parts := strings.Split(r.URL.String(), `/`)
+	if len(parts) == 2 {
+		url, ok = links[parts[1]]
+	}
+	return url, ok
+}
+
+// Контроллер POST /
+func doPost(r *http.Request) (string, bool) {
+	var url string
+	ok := false
+	body := readBody(r)
+
+	if len(body) > 0 {
+		key := generateKey()
+		links[key] = body
+		parts := []string{`http:/`, r.Host, key}
+		url = strings.Join(parts, `/`)
+		ok = true
+	}
+
+	return url, ok
+}
+
+// Читаем в строку содержимое Request.Body
 func readBody(r *http.Request) string {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -83,10 +95,19 @@ func readBody(r *http.Request) string {
 	return string(body)
 }
 
+// Генерация уникального ключа
 func generateKey() string {
-	return generateRandomString(8)
+	var key string
+	for {
+		key = generateRandomString(8)
+		if _, exists := links[key]; !exists {
+			break
+		}
+	}
+	return key
 }
 
+// Генерация хэша заданной длины
 func generateRandomString(length int) string {
 	charset := `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`
 	b := make([]byte, length)
