@@ -3,19 +3,14 @@ package controllers
 import (
 	"github.com/blagorodov/go-shortener/internal/app/storage"
 	"github.com/blagorodov/go-shortener/internal/app/utils"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strings"
 )
 
 // Get Контроллер GET /
 func Get(r *http.Request) (string, bool) {
-	var url string
-	ok := false
-	parts := strings.Split(r.URL.String(), `/`)
-	if len(parts) == 2 {
-		url, ok = storage.DB.Get(parts[1])
-	}
-	return url, ok
+	return storage.DB.Get(chi.URLParam(r, "key"))
 }
 
 // Post Контроллер POST /
