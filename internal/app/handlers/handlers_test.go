@@ -45,7 +45,7 @@ func TestRoot(t *testing.T) {
 			requestBody := tc.requestBody
 			route := "/"
 			if !tc.saveResult {
-				s, _ := strings.CutPrefix(savedLink, "http://example.com")
+				s := strings.TrimPrefix(savedLink, "http://example.com")
 				route = s
 				requestBody = ""
 			}
