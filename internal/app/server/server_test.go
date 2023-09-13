@@ -80,6 +80,12 @@ func TestRouter(t *testing.T) {
 			}
 
 			resp, respBody := testRequest(t, ts, tc.method, route, strings.NewReader(requestBody))
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					panic(err)
+				}
+			}(resp.Body)
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")
 

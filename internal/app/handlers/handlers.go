@@ -5,16 +5,6 @@ import (
 	"net/http"
 )
 
-// Root Обработчик для роута /
-func Root(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		Post(w, r)
-	}
-	if r.Method == http.MethodGet {
-		Get(w, r)
-	}
-}
-
 // Post Обработчик всех POST-запросов
 func Post(w http.ResponseWriter, r *http.Request) {
 	url, ok := controllers.Post(r)
