@@ -1,15 +1,37 @@
-package handlers
+package server
 
 import (
 	"github.com/blagorodov/go-shortener/internal/app/storage"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-func TestRoot(t *testing.T) {
+func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {
+	req, err := http.NewRequest(method, path, body)
+	require.NoError(t, err)
+
+	ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	resp, err := ts.Client().Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	return resp, string(respBody)
+}
+
+func TestRouter(t *testing.T) {
+	ts := httptest.NewServer(Router())
+	defer ts.Close()
+
 	storage.Init()
 
 	testCases := []struct {
@@ -48,23 +70,23 @@ func TestRoot(t *testing.T) {
 				s := strings.TrimPrefix(savedLink, "http://example.com")
 				route = s
 				requestBody = ""
+			} else {
+				route = ts.URL
 			}
 
-			r := httptest.NewRequest(tc.method, route, strings.NewReader(requestBody))
-			w := httptest.NewRecorder()
+			resp, respBody := testRequest(t, ts, tc.method, route, strings.NewReader(requestBody))
 
-			Root(w, r)
+			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")
 
-			assert.Equal(t, tc.expectedCode, w.Code, "Код ответа не совпадает с ожидаемым")
-
-			t.Log(w.Header().Values("Location"))
+			t.Log(resp.Header.Values("Location"))
 
 			if tc.saveResult {
-				savedLink = w.Body.String()
+				savedLink = respBody
 			}
 			if tc.expectedHeaderKey != "" {
-				assert.Equal(t, tc.expectedHeaderValue, w.Header().Get(tc.expectedHeaderKey), "Заголовок не совпадает с ожиданием")
+				assert.Equal(t, tc.expectedHeaderValue, resp.Header.Get(tc.expectedHeaderKey), "Заголовок не совпадает с ожиданием")
 			}
 		})
 	}
+
 }

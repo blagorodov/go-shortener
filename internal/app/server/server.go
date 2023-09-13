@@ -6,16 +6,16 @@ import (
 	"net/http"
 )
 
-// Start Запуск сервера
-func Start() {
+func Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Get("/{key}", handlers.Get)
+	r.Get("/{id}", handlers.Get)
 	r.Post("/", handlers.Post)
-	createServer(r)
+	return r
 }
 
-func createServer(r *chi.Mux) {
-	if err := http.ListenAndServe(`:8080`, r); err != nil {
+// Start Запуск сервера
+func Start() {
+	if err := http.ListenAndServe(`:8080`, Router()); err != nil {
 		panic(err)
 	}
 }

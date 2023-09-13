@@ -10,7 +10,7 @@ import (
 
 // Get Контроллер GET /
 func Get(r *http.Request) (string, bool) {
-	return storage.DB.Get(chi.URLParam(r, "key"))
+	return storage.DB.Get(chi.URLParam(r, "id"))
 }
 
 // Post Контроллер POST /
