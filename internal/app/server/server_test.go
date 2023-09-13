@@ -74,7 +74,6 @@ func TestRouter(t *testing.T) {
 			}
 
 			resp, respBody := testRequest(t, ts, tc.method, route, strings.NewReader(requestBody))
-			defer resp.Body.Close()
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")
 
@@ -86,6 +85,8 @@ func TestRouter(t *testing.T) {
 			if tc.expectedHeaderKey != "" {
 				assert.Equal(t, tc.expectedHeaderValue, resp.Header.Get(tc.expectedHeaderKey), "Заголовок не совпадает с ожиданием")
 			}
+
+			resp.Body.Close()
 		})
 	}
 
