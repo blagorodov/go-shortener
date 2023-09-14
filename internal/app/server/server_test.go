@@ -28,7 +28,6 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 }
 
 func TestRouter(t *testing.T) {
-	config.ParseFlags()
 	ts := httptest.NewServer(Router())
 	defer ts.Close()
 
@@ -65,7 +64,7 @@ func TestRouter(t *testing.T) {
 			requestBody := tc.requestBody
 			route := "/"
 			if !tc.saveResult {
-				s := strings.TrimPrefix(savedLink, config.Options.ResultHost)
+				s := strings.TrimPrefix(savedLink, config.Options.BaseURL)
 				route = ts.URL + s
 				requestBody = ""
 			} else {

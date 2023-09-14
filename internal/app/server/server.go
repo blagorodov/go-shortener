@@ -16,7 +16,7 @@ func Router() *chi.Mux {
 
 // Start Запуск сервера
 func Start() {
-	if err := http.ListenAndServe(config.Options.Server, Router()); err != nil {
+	if err := http.ListenAndServe(config.Options.ServerAddress, Router()); err != nil {
 		panic(err)
 	}
 }

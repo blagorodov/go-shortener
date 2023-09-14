@@ -1,16 +1,28 @@
 package config
 
-import "flag"
+import (
+	"flag"
+	"os"
+	"testing"
+)
 
 type Config struct {
-	Server     string
-	ResultHost string
+	ServerAddress string
+	BaseURL       string
 }
 
 var Options = new(Config)
 
-func ParseFlags() {
-	flag.StringVar(&Options.Server, "a", ":8080", "address and port to run server")
-	flag.StringVar(&Options.ResultHost, "b", "http://localhost:8080", "result server name")
+func init() {
+	testing.Init()
+	flag.StringVar(&Options.ServerAddress, "a", ":8080", "address and port to run server")
+	flag.StringVar(&Options.BaseURL, "b", "http://localhost:8080", "result server name")
 	flag.Parse()
+
+	if e := os.Getenv("SERVER_ADDRESS"); e != "" {
+		Options.ServerAddress = e
+	}
+	if e := os.Getenv("BASE_URL"); e != "" {
+		Options.BaseURL = e
+	}
 }

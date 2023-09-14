@@ -22,7 +22,7 @@ func Post(r *http.Request) (string, bool) {
 
 	if len(body) > 0 {
 		key := storage.DB.Put(body)
-		parts := []string{config.Options.ResultHost, key}
+		parts := []string{config.Options.BaseURL, key}
 		url = strings.Join(parts, `/`)
 		ok = true
 	}
