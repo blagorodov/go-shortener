@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/blagorodov/go-shortener/internal/app/config"
 	"github.com/blagorodov/go-shortener/internal/app/server"
-	"github.com/blagorodov/go-shortener/internal/app/storage"
 )
 
 func main() {
-	storage.Init()
+	config.ParseFlags()
 	server.Start()
 }

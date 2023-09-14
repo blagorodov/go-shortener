@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/blagorodov/go-shortener/internal/app/config"
 	"github.com/blagorodov/go-shortener/internal/app/storage"
 	"github.com/blagorodov/go-shortener/internal/app/utils"
 	"github.com/go-chi/chi/v5"
@@ -21,10 +22,9 @@ func Post(r *http.Request) (string, bool) {
 
 	if len(body) > 0 {
 		key := storage.DB.Put(body)
-		parts := []string{`http:/`, r.Host, key}
+		parts := []string{config.Options.ResultHost, key}
 		url = strings.Join(parts, `/`)
 		ok = true
 	}
-
 	return url, ok
 }

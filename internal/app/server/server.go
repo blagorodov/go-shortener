@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/blagorodov/go-shortener/internal/app/config"
 	"github.com/blagorodov/go-shortener/internal/app/handlers"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -15,7 +16,7 @@ func Router() *chi.Mux {
 
 // Start Запуск сервера
 func Start() {
-	if err := http.ListenAndServe(`:8080`, Router()); err != nil {
+	if err := http.ListenAndServe(config.Options.Server, Router()); err != nil {
 		panic(err)
 	}
 }

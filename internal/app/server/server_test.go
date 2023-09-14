@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/blagorodov/go-shortener/internal/app/storage"
+	"github.com/blagorodov/go-shortener/internal/app/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -28,10 +28,9 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 }
 
 func TestRouter(t *testing.T) {
+	config.ParseFlags()
 	ts := httptest.NewServer(Router())
 	defer ts.Close()
-
-	storage.Init()
 
 	testCases := []struct {
 		method              string
@@ -66,18 +65,15 @@ func TestRouter(t *testing.T) {
 			requestBody := tc.requestBody
 			route := "/"
 			if !tc.saveResult {
-				s := strings.TrimPrefix(savedLink, "http://example.com")
-				route = s
+				s := strings.TrimPrefix(savedLink, config.Options.ResultHost)
+				route = ts.URL + s
 				requestBody = ""
 			} else {
 				route = ts.URL
 			}
-
 			resp, respBody := testRequest(t, ts, tc.method, route, strings.NewReader(requestBody))
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")
-
-			t.Log(resp.Header.Values("Location"))
 
 			if tc.saveResult {
 				savedLink = respBody
@@ -86,7 +82,10 @@ func TestRouter(t *testing.T) {
 				assert.Equal(t, tc.expectedHeaderValue, resp.Header.Get(tc.expectedHeaderKey), "Заголовок не совпадает с ожиданием")
 			}
 
-			resp.Body.Close()
+			err := resp.Body.Close()
+			if err != nil {
+				return
+			}
 		})
 	}
 

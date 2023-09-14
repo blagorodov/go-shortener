@@ -20,7 +20,7 @@ func (l *Links) Get(key string) (string, bool) {
 }
 
 // Init Создание хранилища
-func Init() {
+func init() {
 	DB = make(Links)
 }
 
