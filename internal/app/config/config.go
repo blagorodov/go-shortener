@@ -11,18 +11,20 @@ type Config struct {
 	BaseURL       string
 }
 
-var Options = new(Config)
+var Options = loadConfig()
 
-func init() {
+func loadConfig() Config {
 	testing.Init()
-	flag.StringVar(&Options.ServerAddress, "a", ":8080", "address and port to run server")
-	flag.StringVar(&Options.BaseURL, "b", "http://localhost:8080", "result server name")
+	o := Config{}
+	flag.StringVar(&o.ServerAddress, "a", ":8080", "address and port to run server")
+	flag.StringVar(&o.BaseURL, "b", "http://localhost:8080", "result server name")
 	flag.Parse()
 
 	if e := os.Getenv("SERVER_ADDRESS"); e != "" {
-		Options.ServerAddress = e
+		o.ServerAddress = e
 	}
 	if e := os.Getenv("BASE_URL"); e != "" {
-		Options.BaseURL = e
+		o.BaseURL = e
 	}
+	return o
 }

@@ -1,37 +1,49 @@
 package storage
 
-import "github.com/blagorodov/go-shortener/internal/app/utils"
+import (
+	"math/rand"
+)
 
-type Links map[string]string
+type linksMap map[string]string
 
-var DB Links
+type MemoryRepository struct {
+	Repository
+	links linksMap
+}
+
+var Storage = NewRepository()
 
 // Put Записать короткую ссылку в хранилище
-func (l *Links) Put(link string) string {
-	key := generateKey()
-	DB[key] = link
-	return key
-}
-
-// Get Получить коротку ссылку из хранилища
-func (l *Links) Get(key string) (string, bool) {
-	url, ok := DB[key]
-	return url, ok
-}
-
-// Init Создание хранилища
-func init() {
-	DB = make(Links)
-}
-
-// Генерация уникального ключа
-func generateKey() string {
+func (l *MemoryRepository) Put(link string) string {
 	var key string
 	for {
-		key = utils.GenRand(8)
-		if _, exists := DB[key]; !exists {
+		key = genRand(8)
+		if _, exists := l.links[key]; !exists {
 			break
 		}
 	}
+	l.links[key] = link
 	return key
+}
+
+// Get Получить короткую ссылку из хранилища
+func (l *MemoryRepository) Get(key string) (string, bool) {
+	url, ok := l.links[key]
+	return url, ok
+}
+
+func NewRepository() MemoryRepository {
+	r := MemoryRepository{}
+	r.links = make(linksMap)
+	return r
+}
+
+// GenRand Генерация хэша заданной длины
+func genRand(length int) string {
+	charset := `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }
