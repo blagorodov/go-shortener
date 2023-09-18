@@ -10,18 +10,18 @@ import (
 )
 
 // Get Контроллер GET /
-func Get(r *http.Request) (string, bool) {
-	return storage.Storage.Get(chi.URLParam(r, "id"))
+func Get(r *http.Request, s storage.Storage) (string, bool) {
+	return s.Get(chi.URLParam(r, "id"))
 }
 
 // Post Контроллер POST /
-func Post(r *http.Request) (string, bool) {
+func Post(r *http.Request, s storage.Storage) (string, bool) {
 	var url string
 	ok := false
 	body := readBody(r)
 
 	if len(body) > 0 {
-		key := storage.Storage.Put(body)
+		key := s.Put(body)
 		parts := []string{config.Options.BaseURL, key}
 		url = strings.Join(parts, `/`)
 		ok = true

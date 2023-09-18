@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/blagorodov/go-shortener/internal/app/config"
+	"github.com/blagorodov/go-shortener/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -28,7 +29,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 }
 
 func TestRouter(t *testing.T) {
-	ts := httptest.NewServer(Router())
+	ts := httptest.NewServer(router(storage.NewMemoryStorage()))
 	defer ts.Close()
 
 	testCases := []struct {

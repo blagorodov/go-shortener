@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"github.com/blagorodov/go-shortener/internal/app/controllers"
+	"github.com/blagorodov/go-shortener/internal/app/storage"
 	"net/http"
 )
 
 // Post Обработчик всех POST-запросов
-func Post(w http.ResponseWriter, r *http.Request) {
-	url, ok := controllers.Post(r)
+func Post(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	url, ok := controllers.Post(r, s)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -20,8 +21,8 @@ func Post(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get Обработчик всех GET-запросов
-func Get(w http.ResponseWriter, r *http.Request) {
-	url, ok := controllers.Get(r)
+func Get(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	url, ok := controllers.Get(r, s)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return

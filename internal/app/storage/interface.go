@@ -1,6 +1,6 @@
 package storage
 
-type Repository interface {
+type Storage interface {
 	Put(string) string
 	Get(string) (string, bool)
 }

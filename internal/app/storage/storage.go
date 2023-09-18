@@ -6,15 +6,13 @@ import (
 
 type linksMap map[string]string
 
-type MemoryRepository struct {
-	Repository
+type MemoryStorage struct {
+	Storage
 	links linksMap
 }
 
-var Storage = NewRepository()
-
 // Put Записать короткую ссылку в хранилище
-func (l *MemoryRepository) Put(link string) string {
+func (l *MemoryStorage) Put(link string) string {
 	var key string
 	for {
 		key = genRand(8)
@@ -27,13 +25,13 @@ func (l *MemoryRepository) Put(link string) string {
 }
 
 // Get Получить короткую ссылку из хранилища
-func (l *MemoryRepository) Get(key string) (string, bool) {
+func (l *MemoryStorage) Get(key string) (string, bool) {
 	url, ok := l.links[key]
 	return url, ok
 }
 
-func NewRepository() MemoryRepository {
-	r := MemoryRepository{}
+func NewMemoryStorage() *MemoryStorage {
+	r := &MemoryStorage{}
 	r.links = make(linksMap)
 	return r
 }
