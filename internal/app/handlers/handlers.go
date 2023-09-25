@@ -7,26 +7,30 @@ import (
 )
 
 // Post Обработчик всех POST-запросов
-func Post(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	url, ok := controllers.Post(r, s)
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
-	_, err := w.Write([]byte(url))
-	if err != nil {
-		return
+func Post(s storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		url, ok := controllers.Post(r, s)
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		_, err := w.Write([]byte(url))
+		if err != nil {
+			return
+		}
 	}
 }
 
 // Get Обработчик всех GET-запросов
-func Get(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	url, ok := controllers.Get(r, s)
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+func Get(s storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		url, ok := controllers.Get(r, s)
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Header().Set(`Location`, url)
+		w.WriteHeader(http.StatusTemporaryRedirect)
 	}
-	w.Header().Set(`Location`, url)
-	w.WriteHeader(http.StatusTemporaryRedirect)
 }

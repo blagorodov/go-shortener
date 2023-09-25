@@ -9,6 +9,7 @@ import (
 type Config struct {
 	ServerAddress string
 	BaseURL       string
+	LogPath       string
 }
 
 var Options = loadConfig()
@@ -18,6 +19,7 @@ func loadConfig() Config {
 	o := Config{}
 	flag.StringVar(&o.ServerAddress, "a", ":8080", "address and port to run server")
 	flag.StringVar(&o.BaseURL, "b", "http://localhost:8080", "result server name")
+	flag.StringVar(&o.LogPath, "l", "shortener.log", "log file path")
 	flag.Parse()
 
 	if e := os.Getenv("SERVER_ADDRESS"); e != "" {
