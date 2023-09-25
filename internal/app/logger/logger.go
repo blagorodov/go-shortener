@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"github.com/blagorodov/go-shortener/internal/app/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -77,7 +76,7 @@ func WithLogging(h http.Handler) http.HandlerFunc {
 		h.ServeHTTP(&lw, r)
 
 		duration := time.Since(start)
-		fmt.Println(r.URL)
+
 		sugar.Infoln(
 			"uri", r.RequestURI,
 			"method", r.Method,
