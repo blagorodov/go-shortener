@@ -36,6 +36,7 @@ func TestRouter(t *testing.T) {
 	defer ts.Close()
 
 	testCases := []struct {
+		route               string
 		method              string
 		contentType         string
 		expectedCode        int
@@ -45,6 +46,7 @@ func TestRouter(t *testing.T) {
 		expectedHeaderValue string
 	}{
 		{
+			route:               "/",
 			method:              http.MethodPost,
 			contentType:         "text/plain",
 			expectedCode:        http.StatusCreated,
@@ -54,6 +56,7 @@ func TestRouter(t *testing.T) {
 			expectedHeaderValue: "",
 		},
 		{
+			route:               "/",
 			method:              http.MethodGet,
 			contentType:         "text/plain",
 			expectedCode:        http.StatusTemporaryRedirect,
@@ -63,6 +66,7 @@ func TestRouter(t *testing.T) {
 			expectedHeaderValue: "https://practicum.yandex.ru/",
 		},
 		{
+			route:               "/api/shorten",
 			method:              http.MethodPost,
 			contentType:         "application/json",
 			expectedCode:        http.StatusCreated,
@@ -78,7 +82,7 @@ func TestRouter(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.method, func(t *testing.T) {
 			requestBody := tc.requestBody
-			route := "/"
+			route := tc.route
 			if !tc.saveResult {
 				s := strings.TrimPrefix(savedLink, config.Options.BaseURL)
 				route = ts.URL + s
