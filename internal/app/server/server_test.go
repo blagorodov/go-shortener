@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/app/config"
 	"github.com/blagorodov/go-shortener/internal/app/logger"
 	"github.com/blagorodov/go-shortener/internal/app/storage"
@@ -46,7 +47,7 @@ func TestRouter(t *testing.T) {
 		expectedHeaderValue string
 	}{
 		{
-			route:               "/",
+			route:               "",
 			method:              http.MethodPost,
 			contentType:         "text/plain",
 			expectedCode:        http.StatusCreated,
@@ -56,7 +57,7 @@ func TestRouter(t *testing.T) {
 			expectedHeaderValue: "",
 		},
 		{
-			route:               "/",
+			route:               "",
 			method:              http.MethodGet,
 			contentType:         "text/plain",
 			expectedCode:        http.StatusTemporaryRedirect,
@@ -82,14 +83,13 @@ func TestRouter(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.method, func(t *testing.T) {
 			requestBody := tc.requestBody
-			route := tc.route
+			route := ts.URL + tc.route
 			if !tc.saveResult {
 				s := strings.TrimPrefix(savedLink, config.Options.BaseURL)
-				route = ts.URL + s
+				route = route + s
 				requestBody = ""
-			} else {
-				route = ts.URL
 			}
+			fmt.Println(route)
 			resp, respBody := testRequest(t, ts, tc.method, tc.contentType, route, strings.NewReader(requestBody))
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")
