@@ -20,9 +20,9 @@ func Get(r *http.Request, s storage.Storage) (string, bool) {
 // Post Контроллер POST /
 func Post(r *http.Request, s storage.Storage) (string, bool) {
 	var url string
-	url, ok := getUrl(r)
+	url, ok := getURL(r)
 
-	if len(url) > 0 {
+	if ok && len(url) > 0 {
 		key := s.Put(url)
 		parts := []string{config.Options.BaseURL, key}
 		url = strings.Join(parts, `/`)
@@ -33,7 +33,7 @@ func Post(r *http.Request, s storage.Storage) (string, bool) {
 	return url, ok
 }
 
-func getUrl(r *http.Request) (string, bool) {
+func getURL(r *http.Request) (string, bool) {
 	if r.Header.Get("Content-Type") == "application/json" {
 		var request models.ShortenRequest
 		var buf bytes.Buffer
