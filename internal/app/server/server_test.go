@@ -13,8 +13,9 @@ import (
 	"testing"
 )
 
-func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {
+func testRequest(t *testing.T, ts *httptest.Server, method, contentType, path string, body io.Reader) (*http.Response, string) {
 	req, err := http.NewRequest(method, path, body)
+	req.Header.Set("Content-Type", contentType)
 	require.NoError(t, err)
 
 	ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -36,6 +37,7 @@ func TestRouter(t *testing.T) {
 
 	testCases := []struct {
 		method              string
+		contentType         string
 		expectedCode        int
 		requestBody         string
 		saveResult          bool
@@ -44,6 +46,7 @@ func TestRouter(t *testing.T) {
 	}{
 		{
 			method:              http.MethodPost,
+			contentType:         "text/plain",
 			expectedCode:        http.StatusCreated,
 			requestBody:         "https://practicum.yandex.ru/",
 			saveResult:          true,
@@ -52,11 +55,21 @@ func TestRouter(t *testing.T) {
 		},
 		{
 			method:              http.MethodGet,
+			contentType:         "text/plain",
 			expectedCode:        http.StatusTemporaryRedirect,
 			requestBody:         "",
 			saveResult:          false,
 			expectedHeaderKey:   "Location",
 			expectedHeaderValue: "https://practicum.yandex.ru/",
+		},
+		{
+			method:              http.MethodPost,
+			contentType:         "application/json",
+			expectedCode:        http.StatusCreated,
+			requestBody:         `{"url":"https://practicum.yandex.ru/"}`,
+			saveResult:          true,
+			expectedHeaderKey:   "Content-Type",
+			expectedHeaderValue: "application/json",
 		},
 	}
 
@@ -73,7 +86,7 @@ func TestRouter(t *testing.T) {
 			} else {
 				route = ts.URL
 			}
-			resp, respBody := testRequest(t, ts, tc.method, route, strings.NewReader(requestBody))
+			resp, respBody := testRequest(t, ts, tc.method, tc.contentType, route, strings.NewReader(requestBody))
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")
 

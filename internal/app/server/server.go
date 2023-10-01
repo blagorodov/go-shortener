@@ -13,6 +13,7 @@ func router(s storage.Storage) *chi.Mux {
 	r := chi.NewRouter()
 	r.Get("/{id}", logger.WithLogging(handlers.Get(s)))
 	r.Post("/", logger.WithLogging(handlers.Post(s)))
+	r.Post("/api/shorten", logger.WithLogging(handlers.Post(s)))
 	return r
 }
 
