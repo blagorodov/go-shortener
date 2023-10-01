@@ -46,7 +46,7 @@ func getURL(r *http.Request) (string, bool) {
 			return "", false
 		}
 
-		return request.Url, true
+		return request.URL, true
 	} else {
 		return readBody(r), true
 	}
