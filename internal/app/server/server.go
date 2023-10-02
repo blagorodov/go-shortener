@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/blagorodov/go-shortener/internal/app/compress"
 	"github.com/blagorodov/go-shortener/internal/app/config"
 	"github.com/blagorodov/go-shortener/internal/app/handlers"
 	"github.com/blagorodov/go-shortener/internal/app/logger"
@@ -11,9 +12,11 @@ import (
 
 func router(s storage.Storage) *chi.Mux {
 	r := chi.NewRouter()
-	r.Get("/{id}", logger.WithLogging(handlers.Get(s)))
-	r.Post("/", logger.WithLogging(handlers.Post(s)))
-	r.Post("/api/shorten", logger.WithLogging(handlers.Post(s)))
+	r.Use(logger.WithLogging)
+	r.Use(compress.GzipMiddleware)
+	r.Get("/{id}", handlers.Get(s))
+	r.Post("/", handlers.Post(s))
+	r.Post("/api/shorten", handlers.Post(s))
 	return r
 }
 

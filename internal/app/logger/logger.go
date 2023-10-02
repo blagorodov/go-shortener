@@ -60,7 +60,7 @@ func NewLogger() (*zap.Logger, error) {
 	return cfg.Build()
 }
 
-func WithLogging(h http.Handler) http.HandlerFunc {
+func WithLogging(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -85,5 +85,5 @@ func WithLogging(h http.Handler) http.HandlerFunc {
 			"size", responseData.size,
 		)
 	}
-	return logFn
+	return http.HandlerFunc(logFn)
 }
