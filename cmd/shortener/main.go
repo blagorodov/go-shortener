@@ -8,5 +8,9 @@ import (
 
 func main() {
 	logger.Init()
-	server.Start(storage.NewMemoryStorage())
+	s, err := storage.NewMemoryStorage()
+	if err != nil {
+		panic(err)
+	}
+	server.Start(s)
 }

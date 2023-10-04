@@ -33,7 +33,11 @@ func testRequest(t *testing.T, ts *httptest.Server, method, contentType, path st
 
 func TestRouter(t *testing.T) {
 	logger.Init()
-	ts := httptest.NewServer(router(storage.NewMemoryStorage()))
+	s, err := storage.NewMemoryStorage()
+	if err != nil {
+		panic(err)
+	}
+	ts := httptest.NewServer(router(s))
 	defer ts.Close()
 
 	testCases := []struct {
