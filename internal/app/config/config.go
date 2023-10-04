@@ -18,7 +18,7 @@ var Options = loadConfig()
 func loadConfig() Config {
 	testing.Init()
 	o := Config{}
-	flag.StringVar(&o.ServerAddress, "a", ":8888", "address and port to run server")
+	flag.StringVar(&o.ServerAddress, "a", ":8080", "address and port to run server")
 	flag.StringVar(&o.BaseURL, "b", "http://localhost:8080", "result server name")
 	flag.StringVar(&o.LogPath, "l", "shortener.log", "log file path")
 	flag.StringVar(&o.URLDBPath, "f", "/tmp/short-url-db.json", "url database file path")
