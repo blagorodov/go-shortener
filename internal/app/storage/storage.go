@@ -29,7 +29,7 @@ func (l *MemoryStorage) Put(link string) string {
 		ShortURL:    key,
 		OriginalURL: link,
 	}
-	err := repository.SaveToFile(config.Options.UrlDbPath, &item)
+	err := repository.SaveToFile(config.Options.URLDBPath, &item)
 	if err != nil {
 		return ""
 	}
@@ -47,7 +47,7 @@ func NewMemoryStorage() (*MemoryStorage, error) {
 	r := &MemoryStorage{}
 	r.links = make(linksMap)
 
-	items, err := repository.LoadFromFile(config.Options.UrlDbPath)
+	items, err := repository.LoadFromFile(config.Options.URLDBPath)
 	if err != nil {
 		return nil, err
 	}
