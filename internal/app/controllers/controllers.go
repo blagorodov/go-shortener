@@ -23,7 +23,10 @@ func Post(r *http.Request, s storage.Storage) (string, bool) {
 	url, ok := getURL(r)
 
 	if ok && len(url) > 0 {
-		key := s.Put(url)
+		key, err := s.Put(url)
+		if err != nil {
+			ok = false
+		}
 		parts := []string{config.Options.BaseURL, key}
 		url = strings.Join(parts, `/`)
 		ok = true
@@ -52,7 +55,6 @@ func getURL(r *http.Request) (string, bool) {
 	}
 }
 
-// ReadBody Читаем в строку содержимое Request.Body
 func readBody(r *http.Request) string {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()

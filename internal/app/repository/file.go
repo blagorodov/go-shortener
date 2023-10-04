@@ -4,6 +4,7 @@ import (
 	"strconv"
 )
 
+// LoadFromFile Загрузить список ссылок из файла хранилища
 func LoadFromFile(filename string) ([]ShortenURL, error) {
 	c, err := newConsumer(filename)
 	if err != nil {
@@ -18,7 +19,7 @@ func LoadFromFile(filename string) ([]ShortenURL, error) {
 			if err != nil {
 				uuid = 1
 			}
-			lastUUID = uint(uuid)
+			lastUUID = uuid
 			items = append(items, *item)
 		} else {
 			break
@@ -28,14 +29,19 @@ func LoadFromFile(filename string) ([]ShortenURL, error) {
 	return items, nil
 }
 
-func SaveToFile(filename string, item *ShortenURL) error {
+// SaveToFile Добавить одну ссылку в файл хранилище
+func SaveToFile(filename string, key, link string) error {
 	p, err := newProducer(filename)
 	if err != nil {
 		return err
 	}
-	if item.UUID == "" {
-		lastUUID++
-		item.UUID = strconv.Itoa(int(lastUUID))
+	defer p.close()
+
+	lastUUID++
+	item := &ShortenURL{
+		UUID:        strconv.Itoa(lastUUID),
+		ShortURL:    key,
+		OriginalURL: link,
 	}
 	return p.writeItem(item)
 }

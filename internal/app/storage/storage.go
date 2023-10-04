@@ -14,7 +14,7 @@ type MemoryStorage struct {
 }
 
 // Put Записать короткую ссылку в хранилище
-func (l *MemoryStorage) Put(link string) string {
+func (l *MemoryStorage) Put(link string) (string, error) {
 	var key string
 	for {
 		key = genRand(8)
@@ -24,17 +24,11 @@ func (l *MemoryStorage) Put(link string) string {
 	}
 	l.links[key] = link
 
-	item := repository.ShortenURL{
-		UUID:        "",
-		ShortURL:    key,
-		OriginalURL: link,
-	}
-	err := repository.SaveToFile(config.Options.URLDBPath, &item)
-	if err != nil {
-		return ""
+	if err := repository.SaveToFile(config.Options.URLDBPath, key, link); err != nil {
+		return "", err
 	}
 
-	return key
+	return key, nil
 }
 
 // Get Получить короткую ссылку из хранилища

@@ -1,6 +1,6 @@
 package repository
 
-var lastUUID uint
+var lastUUID int
 
 type ShortenURL struct {
 	UUID        string `json:"uuid"`
