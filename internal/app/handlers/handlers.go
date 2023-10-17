@@ -51,6 +51,7 @@ func Get(s storage.Storage) http.HandlerFunc {
 	}
 }
 
+// Get Проверка подключения к БД
 func PingDB() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := repository.PingDB()
