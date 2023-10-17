@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"github.com/blagorodov/go-shortener/internal/app/config"
+	"github.com/blagorodov/go-shortener/internal/app/repository"
 	"math/rand"
 )
 
@@ -12,7 +14,7 @@ type MemoryStorage struct {
 }
 
 // Put Записать короткую ссылку в хранилище
-func (l *MemoryStorage) Put(link string) string {
+func (l *MemoryStorage) Put(link string) (string, error) {
 	var key string
 	for {
 		key = genRand(8)
@@ -21,7 +23,12 @@ func (l *MemoryStorage) Put(link string) string {
 		}
 	}
 	l.links[key] = link
-	return key
+
+	if err := repository.SaveToFile(config.Options.URLDBPath, key, link); err != nil {
+		return "", err
+	}
+
+	return key, nil
 }
 
 // Get Получить короткую ссылку из хранилища
@@ -30,10 +37,19 @@ func (l *MemoryStorage) Get(key string) (string, bool) {
 	return url, ok
 }
 
-func NewMemoryStorage() *MemoryStorage {
+func NewMemoryStorage() (*MemoryStorage, error) {
 	r := &MemoryStorage{}
 	r.links = make(linksMap)
-	return r
+
+	items, err := repository.LoadFromFile(config.Options.URLDBPath)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range items {
+		r.links[item.ShortURL] = item.OriginalURL
+	}
+
+	return r, nil
 }
 
 // GenRand Генерация хэша заданной длины

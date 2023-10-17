@@ -1,7 +1,9 @@
 package server
 
 import (
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/app/config"
+	"github.com/blagorodov/go-shortener/internal/app/logger"
 	"github.com/blagorodov/go-shortener/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,8 +14,9 @@ import (
 	"testing"
 )
 
-func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {
+func testRequest(t *testing.T, ts *httptest.Server, method, contentType, path string, body io.Reader) (*http.Response, string) {
 	req, err := http.NewRequest(method, path, body)
+	req.Header.Set("Content-Type", contentType)
 	require.NoError(t, err)
 
 	ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -29,11 +32,18 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 }
 
 func TestRouter(t *testing.T) {
-	ts := httptest.NewServer(router(storage.NewMemoryStorage()))
+	logger.Init()
+	s, err := storage.NewMemoryStorage()
+	if err != nil {
+		panic(err)
+	}
+	ts := httptest.NewServer(router(s))
 	defer ts.Close()
 
 	testCases := []struct {
+		route               string
 		method              string
+		contentType         string
 		expectedCode        int
 		requestBody         string
 		saveResult          bool
@@ -41,7 +51,9 @@ func TestRouter(t *testing.T) {
 		expectedHeaderValue string
 	}{
 		{
+			route:               "",
 			method:              http.MethodPost,
+			contentType:         "text/plain",
 			expectedCode:        http.StatusCreated,
 			requestBody:         "https://practicum.yandex.ru/",
 			saveResult:          true,
@@ -49,12 +61,24 @@ func TestRouter(t *testing.T) {
 			expectedHeaderValue: "",
 		},
 		{
+			route:               "",
 			method:              http.MethodGet,
+			contentType:         "text/plain",
 			expectedCode:        http.StatusTemporaryRedirect,
 			requestBody:         "",
 			saveResult:          false,
 			expectedHeaderKey:   "Location",
 			expectedHeaderValue: "https://practicum.yandex.ru/",
+		},
+		{
+			route:               "/api/shorten",
+			method:              http.MethodPost,
+			contentType:         "application/json",
+			expectedCode:        http.StatusCreated,
+			requestBody:         `{"url":"https://practicum.yandex.ru/"}`,
+			saveResult:          true,
+			expectedHeaderKey:   "Content-Type",
+			expectedHeaderValue: "application/json",
 		},
 	}
 
@@ -63,15 +87,14 @@ func TestRouter(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.method, func(t *testing.T) {
 			requestBody := tc.requestBody
-			route := "/"
+			route := ts.URL + tc.route
 			if !tc.saveResult {
 				s := strings.TrimPrefix(savedLink, config.Options.BaseURL)
-				route = ts.URL + s
+				route = route + s
 				requestBody = ""
-			} else {
-				route = ts.URL
 			}
-			resp, respBody := testRequest(t, ts, tc.method, route, strings.NewReader(requestBody))
+			fmt.Println(route)
+			resp, respBody := testRequest(t, ts, tc.method, tc.contentType, route, strings.NewReader(requestBody))
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")
 
