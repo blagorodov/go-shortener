@@ -15,6 +15,7 @@ func router(s storage.Storage) *chi.Mux {
 	r.Use(logger.WithLogging)
 	r.Use(compress.GzipMiddleware)
 	r.Get("/{id}", handlers.Get(s))
+	r.Get("/ping", handlers.PingDB())
 	r.Post("/", handlers.Post(s))
 	r.Post("/api/shorten", handlers.Post(s))
 	return r

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/blagorodov/go-shortener/internal/app/controllers"
 	"github.com/blagorodov/go-shortener/internal/app/models"
+	"github.com/blagorodov/go-shortener/internal/app/repository"
 	"github.com/blagorodov/go-shortener/internal/app/storage"
 	"net/http"
 )
@@ -47,5 +48,16 @@ func Get(s storage.Storage) http.HandlerFunc {
 		}
 		w.Header().Set(`Location`, url)
 		w.WriteHeader(http.StatusTemporaryRedirect)
+	}
+}
+
+func PingDB() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := repository.PingDB()
+		if err != nil {
+			w.WriteHeader(500)
+		} else {
+			w.WriteHeader(200)
+		}
 	}
 }
