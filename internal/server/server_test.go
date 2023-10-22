@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/logger"
-	"github.com/blagorodov/go-shortener/internal/repository/file"
+	"github.com/blagorodov/go-shortener/internal/repository/memory"
 	"github.com/blagorodov/go-shortener/internal/service/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +37,7 @@ func TestRouter(t *testing.T) {
 	logger.Init()
 	ctx := context.Background()
 
-	repository, err := file.NewRepository(ctx)
+	repository, err := memory.NewRepository(ctx)
 	if err != nil {
 		panic(err)
 	}
