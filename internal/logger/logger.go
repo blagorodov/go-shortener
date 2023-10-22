@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/blagorodov/go-shortener/internal/app/config"
+	"github.com/blagorodov/go-shortener/internal/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"

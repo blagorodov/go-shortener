@@ -1,20 +1,16 @@
 package main
 
 import (
-	"github.com/blagorodov/go-shortener/internal/app/logger"
-	"github.com/blagorodov/go-shortener/internal/app/repository"
-	"github.com/blagorodov/go-shortener/internal/app/server"
-	"github.com/blagorodov/go-shortener/internal/app/storage"
+	"context"
+	app2 "github.com/blagorodov/go-shortener/internal/app"
 )
 
 func main() {
-	logger.Init()
-	repository.InitDB()
-	defer repository.CloseDB()
-
-	s, err := storage.NewMemoryStorage()
+	app, err := app2.Create(context.Background())
 	if err != nil {
 		panic(err)
 	}
-	server.Start(s)
+	defer app.Destroy()
+
+	app.Run()
 }

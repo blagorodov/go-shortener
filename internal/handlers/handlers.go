@@ -1,25 +1,24 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/blagorodov/go-shortener/internal/app/controllers"
-	"github.com/blagorodov/go-shortener/internal/app/models"
-	"github.com/blagorodov/go-shortener/internal/app/repository"
-	"github.com/blagorodov/go-shortener/internal/app/storage"
+	"github.com/blagorodov/go-shortener/internal/controllers"
+	"github.com/blagorodov/go-shortener/internal/models"
+	"github.com/blagorodov/go-shortener/internal/service"
 	"net/http"
 )
 
 // Post Обработчик всех POST-запросов
-func Post(s storage.Storage) http.HandlerFunc {
+func Post(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		url, ok := controllers.Post(r, s)
-		if !ok {
+		url, err := controllers.Post(ctx, r, s)
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		var result []byte
-		var err error
 		if r.Header.Get("Content-Type") == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 
@@ -39,10 +38,10 @@ func Post(s storage.Storage) http.HandlerFunc {
 }
 
 // Get Обработчик всех GET-запросов
-func Get(s storage.Storage) http.HandlerFunc {
+func Get(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		url, ok := controllers.Get(r, s)
-		if !ok {
+		url, err := controllers.Get(ctx, r, s)
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -51,10 +50,10 @@ func Get(s storage.Storage) http.HandlerFunc {
 	}
 }
 
-// Get Проверка подключения к БД
-func PingDB() http.HandlerFunc {
+// PingDB Проверка подключения к БД
+func PingDB(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := repository.PingDB()
+		err := s.PingDB(ctx)
 		if err != nil {
 			w.WriteHeader(500)
 		} else {

@@ -2,9 +2,9 @@ package server
 
 import (
 	"fmt"
-	"github.com/blagorodov/go-shortener/internal/app/config"
-	"github.com/blagorodov/go-shortener/internal/app/logger"
-	"github.com/blagorodov/go-shortener/internal/app/storage"
+	"github.com/blagorodov/go-shortener/internal/config"
+	"github.com/blagorodov/go-shortener/internal/logger"
+	"github.com/blagorodov/go-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
