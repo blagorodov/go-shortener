@@ -5,11 +5,11 @@ import (
 	"github.com/blagorodov/go-shortener/internal/service"
 )
 
-type provider struct {
-	repository repository.Repository
-	service    service.Service
+type Provider struct {
+	Repository repository.Repository
+	Service    service.Service
 }
 
-func newProvider() *provider {
-	return &provider{}
+func newProvider() *Provider {
+	return &Provider{}
 }

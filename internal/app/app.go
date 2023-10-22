@@ -9,35 +9,35 @@ import (
 )
 
 type App struct {
-	provider *provider
-	server   *server.Server
-	ctx      context.Context
+	Provider *Provider
+	Server   *server.Server
+	Ctx      context.Context
 }
 
 func Create(ctx context.Context) (*App, error) {
 	logger.Init()
 
 	a := &App{
-		ctx: ctx,
+		Ctx: ctx,
 	}
 	fileRepository, err := file.NewRepository(ctx)
 	if err != nil {
 		return nil, err
 	}
-	a.provider = &provider{
-		repository: fileRepository,
-		service:    shortener.NewService(fileRepository),
+	a.Provider = &Provider{
+		Repository: fileRepository,
+		Service:    shortener.NewService(fileRepository),
 	}
-	a.server = server.NewServer(ctx, a.provider.service)
-	a.server.Start()
+	a.Server = server.NewServer(ctx, a.Provider.Service)
+	a.Server.Start()
 
 	return a, nil
 }
 
 func (a *App) Run() {
-	a.server.Start()
+	a.Server.Start()
 }
 
 func (a *App) Destroy() error {
-	return a.provider.repository.Destroy()
+	return a.Provider.Repository.Destroy()
 }

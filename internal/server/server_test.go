@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/logger"
-	"github.com/blagorodov/go-shortener/internal/storage"
+	"github.com/blagorodov/go-shortener/internal/repository/file"
+	"github.com/blagorodov/go-shortener/internal/service/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -33,11 +35,15 @@ func testRequest(t *testing.T, ts *httptest.Server, method, contentType, path st
 
 func TestRouter(t *testing.T) {
 	logger.Init()
-	s, err := storage.NewMemoryStorage()
+	ctx := context.Background()
+
+	repository, err := file.NewRepository(ctx)
 	if err != nil {
 		panic(err)
 	}
-	ts := httptest.NewServer(router(s))
+	service := shortener.NewService(repository)
+	server := NewServer(ctx, service)
+	ts := httptest.NewServer(server.router)
 	defer ts.Close()
 
 	testCases := []struct {
