@@ -3,45 +3,79 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"github.com/blagorodov/go-shortener/internal/utils"
 	"sync"
 	"time"
 
 	"github.com/blagorodov/go-shortener/internal/config"
 	def "github.com/blagorodov/go-shortener/internal/repository"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var _ def.Repository = (*Repository)(nil)
 
 type Repository struct {
-	config     config.Config
 	m          sync.RWMutex
 	connection *sql.DB
 }
 
-func NewRepository(config config.Config) *Repository {
-	db, err := sql.Open("pgx", config.DBDataSource)
+func NewRepository(ctx context.Context) (*Repository, error) {
+	db, err := sql.Open("pgx", config.Options.DBDataSource)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+
+	q := "CREATE TABLE IF NOT EXISTS public.links(key character varying(50) COLLATE pg_catalog.\"default\", link character varying(255) COLLATE pg_catalog.\"default\", CONSTRAINT links_pkey PRIMARY KEY (key))"
+	if _, err = db.ExecContext(ctx, q); err != nil {
+		return nil, err
+	}
+
 	return &Repository{
-		config:     config,
 		connection: db,
-	}
+	}, nil
 }
 
 func (r *Repository) NewKey(ctx context.Context) (string, error) {
-	return "", nil
+	r.m.Lock()
+	defer r.m.Unlock()
+
+	var key, dbKey string
+	for {
+		key = utils.GenRand(8)
+		err := r.connection.QueryRowContext(ctx, "SELECT key FROM links WHERE key = $1", key).Scan(&dbKey)
+		if errors.Is(err, sql.ErrNoRows) {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return key, nil
 }
 
 func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
-	return "", nil
+	var url string
+	err := r.connection.QueryRowContext(ctx, "SELECT link FROM links WHERE key = $1", key).Scan(&url)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", errors.New("ключ не найден")
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return url, nil
 }
 
 func (r *Repository) Put(ctx context.Context, key, url string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
+	if _, err := r.connection.ExecContext(ctx, "INSERT INTO links(key, link) VALUES($1, $2)", key, url); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -18,10 +18,10 @@ type Repository struct {
 	m    sync.RWMutex
 }
 
-func NewRepository() *Repository {
+func NewRepository(_ context.Context) (*Repository, error) {
 	return &Repository{
 		data: make(linksMap),
-	}
+	}, nil
 }
 
 func (r *Repository) NewKey(_ context.Context) (string, error) {

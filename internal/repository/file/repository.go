@@ -18,8 +18,12 @@ type Repository struct {
 }
 
 func NewRepository(ctx context.Context) (*Repository, error) {
+	rp, err := memory.NewRepository(ctx)
+	if err != nil {
+		return nil, err
+	}
 	r := &Repository{
-		memory: memory.NewRepository(),
+		memory: rp,
 	}
 
 	urls, err := loadFromFile()
