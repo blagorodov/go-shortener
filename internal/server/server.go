@@ -25,8 +25,9 @@ func NewServer(ctx context.Context, service service.Service) *Server {
 	s.router.Use(compress.GzipMiddleware)
 	s.router.Get("/{id}", handlers.Get(ctx, s.service))
 	s.router.Get("/ping", handlers.PingDB(ctx, s.service))
-	s.router.Post("/", handlers.Post(ctx, s.service))
-	s.router.Post("/api/shorten", handlers.Post(ctx, s.service))
+	s.router.Post("/", handlers.ShortenOne(ctx, s.service))
+	s.router.Post("/api/shorten", handlers.ShortenOne(ctx, s.service))
+	s.router.Post("/api/shorten/batch", handlers.ShortenBatch(ctx, s.service))
 	return &s
 }
 

@@ -9,10 +9,10 @@ import (
 	"net/http"
 )
 
-// Post Обработчик всех POST-запросов
-func Post(ctx context.Context, s service.Service) http.HandlerFunc {
+// ShortenOne Обработчик POST /api/shorten
+func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		url, err := controllers.Post(ctx, r, s)
+		url, err := controllers.ShortenOne(ctx, r, s)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -37,7 +37,33 @@ func Post(ctx context.Context, s service.Service) http.HandlerFunc {
 	}
 }
 
-// Get Обработчик всех GET-запросов
+// ShortenBatch Обработчик POST /api/shorten/batch
+func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		urls, err := controllers.ShortenBatch(ctx, r, s)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var result []byte
+		if r.Header.Get("Content-Type") == "application/json" {
+			w.Header().Set("Content-Type", "application/json")
+
+			result, err = json.Marshal(urls)
+			if err != nil {
+				panic(err)
+			}
+		}
+		w.WriteHeader(http.StatusCreated)
+		_, err = w.Write(result)
+		if err != nil {
+			return
+		}
+	}
+}
+
+// Get Обработчик GET /{id}
 func Get(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url, err := controllers.Get(ctx, r, s)
