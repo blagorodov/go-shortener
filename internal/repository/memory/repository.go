@@ -49,12 +49,24 @@ func (r *Repository) Get(_ context.Context, key string) (string, error) {
 	return "", errors.New("ключ не найден")
 }
 
+func (r *Repository) GetKey(_ context.Context, url string) (string, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
+
+	for key, item := range r.data {
+		if item == url {
+			return key, nil
+		}
+	}
+	return "", errors.New("ссылка не найдена")
+}
+
 func (r *Repository) Put(_ context.Context, key, url string) error {
 	r.data[key] = url
 	return nil
 }
 
-func (r *Repository) PingDB(ctx context.Context) error {
+func (r *Repository) PingDB(_ context.Context) error {
 	return nil
 }
 

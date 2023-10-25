@@ -23,6 +23,10 @@ func (s *Service) Get(ctx context.Context, key string) (string, error) {
 	return s.repository.Get(ctx, key)
 }
 
+func (s *Service) GetKey(ctx context.Context, url string) (string, error) {
+	return s.repository.GetKey(ctx, url)
+}
+
 func (s *Service) Put(ctx context.Context, key, url string) error {
 	return s.repository.Put(ctx, key, url)
 }

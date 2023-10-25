@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/blagorodov/go-shortener/internal/controllers"
+	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url, err := controllers.ShortenOne(ctx, r, s)
-		if err != nil {
+		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -22,14 +23,19 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 		if r.Header.Get("Content-Type") == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 
-			result, err = json.Marshal(models.ShortenResponse{Result: url})
-			if err != nil {
-				panic(err)
+			var errMarshal error
+			result, errMarshal = json.Marshal(models.ShortenResponse{Result: url})
+			if errMarshal != nil {
+				panic(errMarshal)
 			}
 		} else {
 			result = []byte(url)
 		}
-		w.WriteHeader(http.StatusCreated)
+		if err != nil && err.Error() == errs.ErrUniqueLinkCode {
+			w.WriteHeader(http.StatusConflict)
+		} else {
+			w.WriteHeader(http.StatusCreated)
+		}
 		_, err = w.Write(result)
 		if err != nil {
 			return
@@ -41,7 +47,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urls, err := controllers.ShortenBatch(ctx, r, s)
-		if err != nil {
+		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -50,12 +56,18 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 		if r.Header.Get("Content-Type") == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 
-			result, err = json.Marshal(urls)
-			if err != nil {
-				panic(err)
+			var errMarshal error
+			result, errMarshal = json.Marshal(urls)
+			if errMarshal != nil {
+				panic(errMarshal)
 			}
 		}
-		w.WriteHeader(http.StatusCreated)
+
+		if err != nil && err.Error() == errs.ErrUniqueLinkCode {
+			w.WriteHeader(http.StatusConflict)
+		} else {
+			w.WriteHeader(http.StatusCreated)
+		}
 		_, err = w.Write(result)
 		if err != nil {
 			return

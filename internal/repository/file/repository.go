@@ -50,6 +50,12 @@ func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	return r.memory.Get(ctx, key)
 }
 
+func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
+	return r.memory.GetKey(ctx, url)
+}
+
 func (r *Repository) Put(ctx context.Context, key, url string) error {
 	r.m.Lock()
 	defer r.m.Unlock()

@@ -6,9 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/blagorodov/go-shortener/internal/config"
+	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"io"
 	"net/http"
 	"strings"
@@ -22,6 +25,8 @@ func Get(ctx context.Context, r *http.Request, s service.Service) (string, error
 // ShortenOne Контроллер POST /api/shorten
 func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string, error) {
 	var url string
+	var resultErr error
+
 	url, err := parseOne(r)
 	if err != nil {
 		return "", err
@@ -37,20 +42,30 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 	}
 
 	err = s.Put(ctx, key, url)
-	if err != nil {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		var errKey error
+		key, errKey = s.GetKey(ctx, url)
+		if errKey != nil {
+			return "", errKey
+		}
+		resultErr = errors.New(errs.ErrUniqueLinkCode)
+	} else if err != nil {
 		return "", err
 	}
 
 	parts := []string{config.Options.BaseURL, key}
 	url = strings.Join(parts, `/`)
 
-	return url, nil
+	return url, resultErr
 }
 
 // ShortenBatch Контроллер POST /api/shorten/batch
 func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (models.BatchResponseList, error) {
 	var urls models.BatchRequestList
 	var result models.BatchResponseList
+	var resultErr error
+
 	urls, err := parseBatch(r)
 	if err != nil {
 		return nil, err
@@ -67,7 +82,15 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 		}
 
 		err = s.Put(ctx, key, item.OriginalURL)
-		if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			var errKey error
+			key, errKey = s.GetKey(ctx, item.OriginalURL)
+			if errKey != nil {
+				return nil, errKey
+			}
+			resultErr = errors.New(errs.ErrUniqueLinkCode)
+		} else if err != nil {
 			return nil, err
 		}
 
@@ -80,7 +103,7 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 		})
 	}
 
-	return result, nil
+	return result, resultErr
 }
 
 func parseOne(r *http.Request) (string, error) {

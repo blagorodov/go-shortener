@@ -31,6 +31,11 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 		return nil, err
 	}
 
+	q = "CREATE UNIQUE INDEX IF NOT EXISTS link_unique ON public.links(link)"
+	if _, err = db.ExecContext(ctx, q); err != nil {
+		return nil, err
+	}
+
 	return &Repository{
 		connection: db,
 	}, nil
@@ -68,6 +73,21 @@ func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	}
 
 	return url, nil
+}
+
+func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
+	var key string
+	err := r.connection.QueryRowContext(ctx, "SELECT key FROM links WHERE link = $1", url).Scan(&key)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", errors.New("ссылка не найдена")
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return key, nil
 }
 
 func (r *Repository) Put(ctx context.Context, key, url string) error {
