@@ -59,7 +59,8 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 			var errMarshal error
 			result, errMarshal = json.Marshal(urls)
 			if errMarshal != nil {
-				panic(errMarshal)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
 			}
 		}
 
@@ -93,9 +94,9 @@ func PingDB(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := s.PingDB(ctx)
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			w.WriteHeader(200)
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 }

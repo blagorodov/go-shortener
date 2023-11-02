@@ -33,7 +33,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 	}
 
 	if len(url) == 0 {
-		return "", errors.New("пустой url")
+		return "", errors.New(errs.ErrEmptyUrl)
 	}
 
 	key, err := s.NewKey(ctx)
@@ -121,7 +121,7 @@ func parseOne(r *http.Request) (string, error) {
 
 		return request.URL, nil
 	} else {
-		return readBody(r), nil
+		return readBody(r)
 	}
 }
 
@@ -143,13 +143,16 @@ func parseBatch(r *http.Request) (models.BatchRequestList, error) {
 	return nil, nil
 }
 
-func readBody(r *http.Request) string {
+func readBody(r *http.Request) (string, error) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
 			panic(err)
 		}
 	}(r.Body)
-	body, _ := io.ReadAll(r.Body)
-	return string(body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
