@@ -33,7 +33,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 	}
 
 	if len(url) == 0 {
-		return "", errors.New(errs.ErrEmptyUrl)
+		return "", errors.New(errs.ErrEmptyURL)
 	}
 
 	key, err := s.NewKey(ctx)
