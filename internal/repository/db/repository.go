@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/utils"
 	"sync"
 	"time"
@@ -66,7 +67,7 @@ func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	var url string
 	err := r.connection.QueryRowContext(ctx, "SELECT link FROM links WHERE key = $1", key).Scan(&url)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("ключ не найден")
+		return "", errors.New(errs.ErrKeyNotFound)
 	}
 	if err != nil {
 		return "", err
@@ -81,7 +82,7 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	var key string
 	err := r.connection.QueryRowContext(ctx, "SELECT key FROM links WHERE link = $1", url).Scan(&key)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New("ссылка не найдена")
+		return "", errors.New(errs.ErrURLNotFound)
 	}
 	if err != nil {
 		return "", err
