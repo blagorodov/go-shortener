@@ -11,6 +11,7 @@ type Config struct {
 	BaseURL       string
 	LogPath       string
 	URLDBPath     string
+	DBDataSource  string
 }
 
 var Options = loadConfig()
@@ -21,7 +22,9 @@ func loadConfig() Config {
 	flag.StringVar(&o.ServerAddress, "a", ":8080", "address and port to run server")
 	flag.StringVar(&o.BaseURL, "b", "http://localhost:8080", "result server name")
 	flag.StringVar(&o.LogPath, "l", "shortener.log", "log file path")
-	flag.StringVar(&o.URLDBPath, "f", "/tmp/short-url-db.json", "url database file path")
+	flag.StringVar(&o.URLDBPath, "f", "", "url database file path")
+	// host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable
+	flag.StringVar(&o.DBDataSource, "d", "", "database data source")
 	flag.Parse()
 
 	if e := os.Getenv("SERVER_ADDRESS"); e != "" {
@@ -32,6 +35,9 @@ func loadConfig() Config {
 	}
 	if e := os.Getenv("FILE_STORAGE_PATH"); e != "" {
 		o.URLDBPath = e
+	}
+	if e := os.Getenv("DATABASE_DSN"); e != "" {
+		o.DBDataSource = e
 	}
 	return o
 }

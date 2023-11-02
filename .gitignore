@@ -22,4 +22,4 @@ vendor/
 .idea
 .vscode
 /cmd/shortener/shortener.log
-/internal/app/server/shortener.log
+/internal/server/shortener.log
