@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/blagorodov/go-shortener/internal/errs"
+	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/utils"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,6 +30,11 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 	}
 
 	q := "CREATE TABLE IF NOT EXISTS public.links(key character varying(50) COLLATE pg_catalog.\"default\", link character varying(255) COLLATE pg_catalog.\"default\", CONSTRAINT links_pkey PRIMARY KEY (key))"
+	if _, err = db.ExecContext(ctx, q); err != nil {
+		return nil, err
+	}
+
+	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id INTEGER"
 	if _, err = db.ExecContext(ctx, q); err != nil {
 		return nil, err
 	}
@@ -111,4 +118,34 @@ func (r *Repository) PingDB(ctx context.Context) error {
 	dbCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	return r.connection.PingContext(dbCtx)
+}
+
+func (r *Repository) GetURLs(ctx context.Context, userID int) (models.AllResponseList, error) {
+	result := make(models.AllResponseList, 0)
+	r.m.RLock()
+	defer r.m.RUnlock()
+
+	rows, err := r.connection.QueryContext(ctx, "SELECT key, link FROM links WHERE user_id = $1", userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var key, link string
+		err = rows.Scan(&key, &link)
+		if err != nil {
+			return nil, err
+		}
+
+		parts := []string{config.Options.BaseURL, key}
+		shortURL := strings.Join(parts, `/`)
+
+		var r = models.AllResponse{
+			ShortURL:    shortURL,
+			OriginalURL: link,
+		}
+		result = append(result, r)
+	}
+
+	return result, nil
 }

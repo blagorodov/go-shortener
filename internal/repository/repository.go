@@ -1,6 +1,9 @@
 package repository
 
-import "context"
+import (
+	"context"
+	"github.com/blagorodov/go-shortener/internal/models"
+)
 
 type Repository interface {
 	NewKey(ctx context.Context) (string, error)
@@ -9,4 +12,5 @@ type Repository interface {
 	Put(ctx context.Context, key, url string) error
 	PingDB(ctx context.Context) error
 	Destroy() error
+	GetURLs(ctx context.Context, userID int) (models.AllResponseList, error)
 }

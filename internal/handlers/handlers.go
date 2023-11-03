@@ -100,3 +100,60 @@ func PingDB(ctx context.Context, s service.Service) http.HandlerFunc {
 		}
 	}
 }
+
+// Login Авторизация пользователя
+func Login() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		token, err := controllers.Login(r)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+
+		result, err := json.Marshal(models.LoginResponse{
+			Token: token,
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		_, err = w.Write(result)
+		if err != nil {
+			return
+		}
+	}
+}
+
+func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		urls, err := controllers.GetURLs(ctx, r, s)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+
+		result, err := json.Marshal(urls)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if len(result) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		_, err = w.Write(result)
+		if err != nil {
+			return
+		}
+	}
+}

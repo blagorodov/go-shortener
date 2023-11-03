@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"errors"
+	"github.com/blagorodov/go-shortener/internal/models"
 	"sync"
 
 	def "github.com/blagorodov/go-shortener/internal/repository"
@@ -72,4 +73,8 @@ func (r *Repository) PingDB(_ context.Context) error {
 
 func (r *Repository) Destroy() error {
 	return nil
+}
+
+func (r *Repository) GetURLs(_ context.Context, _ int) (models.AllResponseList, error) {
+	return nil, nil
 }

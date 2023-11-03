@@ -2,6 +2,7 @@ package shortener
 
 import (
 	"context"
+	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/repository"
 )
 
@@ -33,4 +34,8 @@ func (s *Service) Put(ctx context.Context, key, url string) error {
 
 func (s *Service) PingDB(ctx context.Context) error {
 	return s.repository.PingDB(ctx)
+}
+
+func (s *Service) GetURLs(ctx context.Context, userID int) (models.AllResponseList, error) {
+	return s.repository.GetURLs(ctx, userID)
 }

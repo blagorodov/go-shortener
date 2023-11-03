@@ -28,8 +28,8 @@ func NewServer(ctx context.Context, service service.Service) *Server {
 	s.router.Post("/", handlers.ShortenOne(ctx, s.service))
 	s.router.Post("/api/shorten", handlers.ShortenOne(ctx, s.service))
 	s.router.Post("/api/shorten/batch", handlers.ShortenBatch(ctx, s.service))
-	// login: /api/user/login ? id : token
-	// urls: /api/user/urls : list of urls by user id
+	s.router.Post("/api/user/login", handlers.Login())
+	s.router.Post("/api/user/urls", handlers.GetUserURLs(ctx, s.service))
 	return &s
 }
 

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/blagorodov/go-shortener/internal/auth"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
@@ -106,6 +107,23 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 	return result, resultErr
 }
 
+func Login(r *http.Request) (string, error) {
+	loginRequest, err := parseLogin(r)
+	if err != nil {
+		return "", err
+	}
+	return auth.EncodeToken(loginRequest.UserID)
+}
+
+func GetURLs(ctx context.Context, r *http.Request, s service.Service) (models.AllResponseList, error) {
+	splitToken := strings.Split(r.Header.Get("Authorization"), "Bearer ")
+	userID, err := auth.DecodeToken(splitToken[1])
+	if err != nil {
+		return nil, err
+	}
+	return s.GetURLs(ctx, userID)
+}
+
 func parseOne(r *http.Request) (string, error) {
 	if r.Header.Get("Content-Type") == "application/json" {
 		var request models.ShortenRequest
@@ -139,6 +157,24 @@ func parseBatch(r *http.Request) (models.BatchRequestList, error) {
 		}
 
 		return list, nil
+	}
+	return nil, nil
+}
+
+func parseLogin(r *http.Request) (*models.LoginRequest, error) {
+	if r.Header.Get("Content-Type") == "application/json" {
+		var buf bytes.Buffer
+		var result models.LoginRequest
+
+		_, err := buf.ReadFrom(r.Body)
+		if err != nil {
+			return nil, err
+		}
+		if err = json.Unmarshal(buf.Bytes(), &result); err != nil {
+			return nil, err
+		}
+
+		return &result, nil
 	}
 	return nil, nil
 }
