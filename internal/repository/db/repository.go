@@ -129,6 +129,9 @@ func (r *Repository) GetURLs(ctx context.Context, userID int) (models.AllRespons
 	if err != nil {
 		return nil, err
 	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
 
 	for rows.Next() {
 		var key, link string

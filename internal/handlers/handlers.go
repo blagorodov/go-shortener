@@ -135,8 +135,7 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 		urls, err := controllers.GetURLs(ctx, r, s)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
+			return
 		}
 
 		result, err := json.Marshal(urls)
@@ -149,6 +148,8 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 		if len(result) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
+		} else {
+			w.WriteHeader(http.StatusOK)
 		}
 
 		_, err = w.Write(result)
