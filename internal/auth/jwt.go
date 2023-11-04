@@ -12,19 +12,19 @@ type claims struct {
 }
 
 const (
-	TOKEN_EXP  = time.Hour * 3
-	SECRET_KEY = "secretsecretsecret"
+	TokenExp  = time.Hour * 3
+	SecretKey = "secretsecretsecret"
 )
 
 func EncodeToken(id int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKEN_EXP)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
 		},
 		UserID: id,
 	})
 
-	tokenString, err := token.SignedString([]byte(SECRET_KEY))
+	tokenString, err := token.SignedString([]byte(SecretKey))
 	if err != nil {
 		return "", err
 	}
@@ -39,7 +39,7 @@ func DecodeToken(tokenString string) (int, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-		return []byte(SECRET_KEY), nil
+		return []byte(SecretKey), nil
 	})
 	if err != nil {
 		return 0, err
