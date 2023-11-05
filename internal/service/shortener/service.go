@@ -28,8 +28,8 @@ func (s *Service) GetKey(ctx context.Context, url string) (string, error) {
 	return s.repository.GetKey(ctx, url)
 }
 
-func (s *Service) Put(ctx context.Context, key, url string) error {
-	return s.repository.Put(ctx, key, url)
+func (s *Service) Put(ctx context.Context, key, url string, userID int) error {
+	return s.repository.Put(ctx, key, url, userID)
 }
 
 func (s *Service) PingDB(ctx context.Context) error {

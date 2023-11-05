@@ -62,7 +62,7 @@ func (r *Repository) GetKey(_ context.Context, url string) (string, error) {
 	return "", errors.New("ссылка не найдена")
 }
 
-func (r *Repository) Put(_ context.Context, key, url string) error {
+func (r *Repository) Put(_ context.Context, key, url string, _ int) error {
 	r.data[key] = url
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/auth"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/errs"
@@ -27,6 +28,7 @@ func Get(ctx context.Context, r *http.Request, s service.Service) (string, error
 func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string, error) {
 	var url string
 	var resultErr error
+	fmt.Println("shortone")
 
 	url, err := parseOne(r)
 	if err != nil {
@@ -42,7 +44,10 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 		return "", err
 	}
 
-	err = s.Put(ctx, key, url)
+	userID, _ := auth.GetUserID(r)
+	fmt.Println(userID)
+
+	err = s.Put(ctx, key, url, userID)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 		var errKey error
@@ -82,7 +87,9 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 			return nil, err
 		}
 
-		err = s.Put(ctx, key, item.OriginalURL)
+		userID, _ := auth.GetUserID(r)
+
+		err = s.Put(ctx, key, item.OriginalURL, userID)
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			var errKey error
@@ -116,12 +123,12 @@ func Login(r *http.Request) (string, error) {
 }
 
 func GetURLs(ctx context.Context, r *http.Request, s service.Service) (models.AllResponseList, error) {
-	splitToken := strings.Split(r.Header.Get("Authorization"), "Bearer ")
-	userID, err := auth.DecodeToken(splitToken[1])
-	if err != nil {
-		return nil, err
+	userID, err := auth.GetUserID(r)
+	urls, errURLs := s.GetURLs(ctx, userID)
+	if errURLs != nil {
+		err = errURLs
 	}
-	return s.GetURLs(ctx, userID)
+	return urls, err
 }
 
 func parseOne(r *http.Request) (string, error) {

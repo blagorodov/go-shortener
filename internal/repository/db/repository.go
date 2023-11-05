@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/utils"
@@ -98,10 +99,11 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	return key, nil
 }
 
-func (r *Repository) Put(ctx context.Context, key, url string) error {
+func (r *Repository) Put(ctx context.Context, key, url string, userID int) error {
 	r.m.Lock()
 	defer r.m.Unlock()
-	if _, err := r.connection.ExecContext(ctx, "INSERT INTO links(key, link) VALUES($1, $2)", key, url); err != nil {
+	fmt.Println("db rep")
+	if _, err := r.connection.ExecContext(ctx, "INSERT INTO links(key, link, user_id) VALUES($1, $2, $3)", key, url, userID); err != nil {
 		return err
 	}
 	return nil

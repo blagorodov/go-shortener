@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"net/http"
 	"time"
 )
 
@@ -50,4 +51,12 @@ func DecodeToken(tokenString string) (int, error) {
 	}
 
 	return cls.UserID, nil
+}
+
+func GetUserID(r *http.Request) (int, error) {
+	cookie, err := r.Cookie("x-token")
+	if err != nil {
+		return 0, err
+	}
+	return DecodeToken(cookie.Value)
 }

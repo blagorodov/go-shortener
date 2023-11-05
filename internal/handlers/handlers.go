@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/controllers"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
@@ -13,6 +14,7 @@ import (
 // ShortenOne Обработчик POST /api/shorten
 func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("ShortenOne Handler")
 		url, err := controllers.ShortenOne(ctx, r, s)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
 			w.WriteHeader(http.StatusBadRequest)
@@ -134,7 +136,7 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 
 		urls, err := controllers.GetURLs(ctx, r, s)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
