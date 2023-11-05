@@ -135,10 +135,10 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		urls, err := controllers.GetURLs(ctx, r, s)
-		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
+		//if err != nil {
+		//	w.WriteHeader(http.StatusUnauthorized)
+		//	return
+		//}
 
 		result, err := json.Marshal(urls)
 
