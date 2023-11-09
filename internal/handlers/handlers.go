@@ -126,11 +126,11 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		if !cookies.Check(r) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
+		//if !cookies.Check(r) {
+		//	w.Header().Set("Content-Type", "application/json")
+		//	w.WriteHeader(http.StatusUnauthorized)
+		//	return
+		//}
 
 		urls, _ := controllers.GetURLs(ctx, r, s)
 
