@@ -40,7 +40,7 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 		return nil, err
 	}
 
-	q = "CREATE UNIQUE INDEX IF NOT EXISTS link_unique ON public.links(link)"
+	q = "CREATE UNIQUE INDEX IF NOT EXISTS link_unique ON public.links(link, user_id)"
 	if _, err = db.ExecContext(ctx, q); err != nil {
 		return nil, err
 	}

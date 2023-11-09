@@ -16,7 +16,16 @@ import (
 func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("ShortenOne Handler")
-		url, err := controllers.ShortenOne(ctx, r, s)
+
+		cookie, _ := r.Cookie("token")
+		if !cookies.Check(r) {
+			cookie = cookies.New()
+			http.SetCookie(w, cookie)
+		}
+
+		userID, _ := cookies.GetIDCookie(cookie)
+
+		url, err := controllers.ShortenOne(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -49,7 +58,15 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 // ShortenBatch Обработчик POST /api/shorten/batch
 func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		urls, err := controllers.ShortenBatch(ctx, r, s)
+		cookie, _ := r.Cookie("token")
+		if !cookies.Check(r) {
+			cookie = cookies.New()
+			http.SetCookie(w, cookie)
+		}
+
+		userID, _ := cookies.GetIDCookie(cookie)
+
+		urls, err := controllers.ShortenBatch(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
 			w.WriteHeader(http.StatusBadRequest)
 			return

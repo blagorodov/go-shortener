@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-var hashKey []byte
+var hashKey = []byte("secrethashkey")
 
 func New() *http.Cookie {
 	id := uuid.NewString()
@@ -30,23 +31,27 @@ func New() *http.Cookie {
 }
 
 func GetID(r *http.Request) (string, error) {
-	cookie, err := r.Cookie("token")
+	c, err := r.Cookie("token")
 	if err != nil {
 		return "", err
 	}
-	parts := strings.Split(cookie.Value, ":")
+	return GetIDCookie(c)
+}
+
+func GetIDCookie(c *http.Cookie) (string, error) {
+	parts := strings.Split(c.Value, ":")
 
 	if len(parts) != 2 {
 		return "", errors.New("wrong token format")
 	}
 	id := parts[0]
-	key := parts[1]
+	key, _ := hex.DecodeString(parts[1])
 
 	h := hmac.New(sha256.New, hashKey)
 	h.Write([]byte(id))
 	dst := h.Sum(nil)
 
-	if !hmac.Equal([]byte(key), dst) {
+	if !hmac.Equal(dst, key) {
 		return "", errors.New("wrong token")
 	}
 	return id, nil
@@ -54,7 +59,7 @@ func GetID(r *http.Request) (string, error) {
 
 func Check(r *http.Request) bool {
 	_, err := GetID(r)
-	return err != nil
+	return err == nil
 }
 
 func generateRandom(size int) ([]byte, error) {

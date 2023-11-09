@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/cookies"
 	"github.com/blagorodov/go-shortener/internal/errs"
@@ -25,10 +24,9 @@ func Get(ctx context.Context, r *http.Request, s service.Service) (string, error
 }
 
 // ShortenOne Контроллер POST /api/shorten
-func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string, error) {
+func ShortenOne(ctx context.Context, r *http.Request, s service.Service, userID string) (string, error) {
 	var url string
 	var resultErr error
-	fmt.Println("shortone")
 
 	url, err := parseOne(r)
 	if err != nil {
@@ -43,9 +41,6 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 	if err != nil {
 		return "", err
 	}
-
-	userID, _ := cookies.GetID(r)
-	fmt.Println(userID)
 
 	err = s.Put(ctx, key, url, userID)
 	var pgErr *pgconn.PgError
@@ -67,7 +62,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 }
 
 // ShortenBatch Контроллер POST /api/shorten/batch
-func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (models.BatchResponseList, error) {
+func ShortenBatch(ctx context.Context, r *http.Request, s service.Service, userID string) (models.BatchResponseList, error) {
 	var urls models.BatchRequestList
 	var result models.BatchResponseList
 	var resultErr error
@@ -86,8 +81,6 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 		if err != nil {
 			return nil, err
 		}
-
-		userID, _ := cookies.GetID(r)
 
 		err = s.Put(ctx, key, item.OriginalURL, userID)
 		var pgErr *pgconn.PgError
