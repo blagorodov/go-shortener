@@ -35,7 +35,7 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 		return nil, err
 	}
 
-	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id varying(50) COLLATE pg_catalog.\"default\""
+	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id character varying(50) COLLATE pg_catalog.\"default\""
 	if _, err = db.ExecContext(ctx, q); err != nil {
 		return nil, err
 	}
