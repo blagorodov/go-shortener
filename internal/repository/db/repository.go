@@ -132,7 +132,7 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 	if userID != "" {
 		rows, err = r.connection.QueryContext(ctx, "SELECT key, link FROM links WHERE user_id = $1", userID)
 	} else {
-		rows, err = r.connection.QueryContext(ctx, "SELECT key, link FROM links WHERE user_id IS NULL")
+		rows, err = r.connection.QueryContext(ctx, "SELECT key, link FROM links")
 	}
 	if err != nil {
 		return nil, err

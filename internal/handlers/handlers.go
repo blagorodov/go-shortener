@@ -138,7 +138,10 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 		//	return
 		//}
 
-		urls, _ := controllers.GetURLs(ctx, r, s)
+		urls, err := controllers.GetURLs(ctx, r, s)
+		if err != nil {
+			fmt.Println(err)
+		}
 
 		result, err := json.Marshal(urls)
 
