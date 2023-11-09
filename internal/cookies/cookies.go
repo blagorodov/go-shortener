@@ -31,11 +31,14 @@ func New() *http.Cookie {
 }
 
 func GetID(r *http.Request) (string, error) {
+	fmt.Println("GetID cookie:")
+	fmt.Println(r.Header)
+
 	c, err := r.Cookie("token")
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("GetID cookie:")
+	fmt.Println("cookie:")
 	fmt.Println(c)
 	return GetIDCookie(c)
 }
