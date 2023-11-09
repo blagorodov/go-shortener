@@ -99,11 +99,6 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 // Get Обработчик GET /{id}
 func Get(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !cookies.Check(r) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
 		url, err := controllers.Get(ctx, r, s)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
