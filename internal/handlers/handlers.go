@@ -140,7 +140,7 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 			return
 		}
 
-		if len(result) == 0 {
+		if len(urls) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		} else {
