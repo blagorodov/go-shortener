@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/blagorodov/go-shortener/internal/auth"
 	"github.com/blagorodov/go-shortener/internal/config"
+	"github.com/blagorodov/go-shortener/internal/cookies"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
@@ -44,7 +44,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 		return "", err
 	}
 
-	userID, _ := auth.GetUserID(r)
+	userID, _ := cookies.GetID(r)
 	fmt.Println(userID)
 
 	err = s.Put(ctx, key, url, userID)
@@ -87,7 +87,7 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 			return nil, err
 		}
 
-		userID, _ := auth.GetUserID(r)
+		userID, _ := cookies.GetID(r)
 
 		err = s.Put(ctx, key, item.OriginalURL, userID)
 		var pgErr *pgconn.PgError
@@ -114,16 +114,8 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 	return result, resultErr
 }
 
-func Login(r *http.Request) (string, error) {
-	loginRequest, err := parseLogin(r)
-	if err != nil {
-		return "", err
-	}
-	return auth.EncodeToken(loginRequest.UserID)
-}
-
 func GetURLs(ctx context.Context, r *http.Request, s service.Service) (models.AllResponseList, error) {
-	userID, err := auth.GetUserID(r)
+	userID, err := cookies.GetID(r)
 	urls, errURLs := s.GetURLs(ctx, userID)
 	if errURLs != nil {
 		err = errURLs

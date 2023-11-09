@@ -33,7 +33,7 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 	}
 
 	for _, url := range urls {
-		if err := r.memory.Put(ctx, url.ShortURL, url.OriginalURL, 0); err != nil {
+		if err := r.memory.Put(ctx, url.ShortURL, url.OriginalURL, ""); err != nil {
 			return nil, err
 		}
 	}
@@ -57,7 +57,7 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	return r.memory.GetKey(ctx, url)
 }
 
-func (r *Repository) Put(ctx context.Context, key, url string, userID int) error {
+func (r *Repository) Put(ctx context.Context, key, url, userID string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
 	if err := r.memory.Put(ctx, key, url, userID); err != nil {
@@ -74,7 +74,7 @@ func (r *Repository) Destroy() error {
 	return nil
 }
 
-func (r *Repository) GetURLs(_ context.Context, _ int) (models.AllResponseList, error) {
+func (r *Repository) GetURLs(_ context.Context, _ string) (models.AllResponseList, error) {
 	return nil, nil
 }
 

@@ -62,7 +62,7 @@ func (r *Repository) GetKey(_ context.Context, url string) (string, error) {
 	return "", errors.New("ссылка не найдена")
 }
 
-func (r *Repository) Put(_ context.Context, key, url string, _ int) error {
+func (r *Repository) Put(_ context.Context, key, url, _ string) error {
 	r.data[key] = url
 	return nil
 }
@@ -75,6 +75,6 @@ func (r *Repository) Destroy() error {
 	return nil
 }
 
-func (r *Repository) GetURLs(_ context.Context, _ int) (models.AllResponseList, error) {
+func (r *Repository) GetURLs(_ context.Context, _ string) (models.AllResponseList, error) {
 	return nil, nil
 }

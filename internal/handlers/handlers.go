@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/controllers"
+	"github.com/blagorodov/go-shortener/internal/cookies"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
@@ -81,6 +82,11 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 // Get Обработчик GET /{id}
 func Get(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cookies.Check(r) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		url, err := controllers.Get(ctx, r, s)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -103,42 +109,18 @@ func PingDB(ctx context.Context, s service.Service) http.HandlerFunc {
 	}
 }
 
-// Login Авторизация пользователя
-func Login() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
-		token, err := controllers.Login(r)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-		}
-
-		result, err := json.Marshal(models.LoginResponse{
-			Token: token,
-		})
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		_, err = w.Write(result)
-		if err != nil {
-			return
-		}
-	}
-}
-
+// GetUserURLs Список сокращений пользователя
 func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
+		if !cookies.Check(r) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		urls, _ := controllers.GetURLs(ctx, r, s)
-		//if err != nil {
-		//	w.WriteHeader(http.StatusUnauthorized)
-		//	return
-		//}
 
 		result, err := json.Marshal(urls)
 

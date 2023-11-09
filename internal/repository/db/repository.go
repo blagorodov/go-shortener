@@ -35,7 +35,7 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 		return nil, err
 	}
 
-	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id INTEGER"
+	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id varying(50) COLLATE pg_catalog.\"default\""
 	if _, err = db.ExecContext(ctx, q); err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	return key, nil
 }
 
-func (r *Repository) Put(ctx context.Context, key, url string, userID int) error {
+func (r *Repository) Put(ctx context.Context, key, url, userID string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
 	fmt.Println("db rep")
@@ -122,7 +122,7 @@ func (r *Repository) PingDB(ctx context.Context) error {
 	return r.connection.PingContext(dbCtx)
 }
 
-func (r *Repository) GetURLs(ctx context.Context, userID int) (models.AllResponseList, error) {
+func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResponseList, error) {
 	result := make(models.AllResponseList, 0)
 	r.m.RLock()
 	defer r.m.RUnlock()
