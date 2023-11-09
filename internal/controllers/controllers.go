@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
@@ -40,6 +41,8 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service, userID 
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Printf("ShortenOne: %s => %s (%s)\n", key, url, userID)
 
 	err = s.Put(ctx, key, url, userID)
 	var pgErr *pgconn.PgError
