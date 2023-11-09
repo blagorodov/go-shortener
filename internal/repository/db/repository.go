@@ -127,7 +127,13 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 	r.m.RLock()
 	defer r.m.RUnlock()
 
-	rows, err := r.connection.QueryContext(ctx, "SELECT key, link FROM links WHERE user_id = $1", userID)
+	var rows *sql.Rows
+	var err error
+	if userID != "" {
+		rows, err = r.connection.QueryContext(ctx, "SELECT key, link FROM links WHERE user_id = $1", userID)
+	} else {
+		rows, err = r.connection.QueryContext(ctx, "SELECT key, link FROM links")
+	}
 	if err != nil {
 		return nil, err
 	}
