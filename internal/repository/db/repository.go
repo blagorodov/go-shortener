@@ -130,9 +130,9 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 	var rows *sql.Rows
 	var err error
 	if userID != "" {
-		rows, err = r.connection.QueryContext(ctx, "SELECT key, link FROM links WHERE user_id = $1", userID)
+		rows, err = r.connection.QueryContext(ctx, "SELECT key, link, user_id FROM links WHERE user_id = $1", userID)
 	} else {
-		rows, err = r.connection.QueryContext(ctx, "SELECT key, link FROM links")
+		rows, err = r.connection.QueryContext(ctx, "SELECT key, link, user_id FROM links")
 	}
 	if err != nil {
 		return nil, err
@@ -142,11 +142,13 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 	}
 
 	for rows.Next() {
-		var key, link string
-		err = rows.Scan(&key, &link)
+		var key, link, userId string
+		err = rows.Scan(&key, &link, &userId)
 		if err != nil {
 			return nil, err
 		}
+
+		fmt.Printf("%s => %s (%s)\n", key, link, userId)
 
 		parts := []string{config.Options.BaseURL, key}
 		shortURL := strings.Join(parts, `/`)
