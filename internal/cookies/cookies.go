@@ -42,8 +42,9 @@ func GetID(w http.ResponseWriter, r *http.Request) (string, error) {
 	}
 	if token == "" {
 		cookie := New()
+		token = cookie.Value
 		http.SetCookie(w, cookie)
-		w.Header().Set("Authorization", cookie.Value)
+		w.Header().Set("Authorization", token)
 		//return "", nil
 	}
 	fmt.Println("token:")
