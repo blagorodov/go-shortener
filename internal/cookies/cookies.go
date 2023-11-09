@@ -30,20 +30,28 @@ func New() *http.Cookie {
 	}
 }
 
-func GetID(r *http.Request) (string, error) {
-	fmt.Println("GetID cookie:")
+func GetID(w http.ResponseWriter, r *http.Request) (string, error) {
+	fmt.Println("GetID:")
 
+	var token string
 	c, err := r.Cookie("token")
 	if err != nil {
-		return "", err
+		token = r.Header.Get("Authorization")
+	} else {
+		token = c.Value
 	}
-	fmt.Println("cookie:")
-	fmt.Println(c)
-	return GetIDCookie(c)
+	if token == "" {
+		cookie := New()
+		http.SetCookie(w, cookie)
+		w.Header().Set("Authorization", cookie.Value)
+	}
+	fmt.Println("token:")
+	fmt.Println(token)
+	return GetIDToken(token)
 }
 
-func GetIDCookie(c *http.Cookie) (string, error) {
-	parts := strings.Split(c.Value, ":")
+func GetIDToken(token string) (string, error) {
+	parts := strings.Split(token, ":")
 
 	if len(parts) != 2 {
 		return "", errors.New("wrong token format")
@@ -61,10 +69,10 @@ func GetIDCookie(c *http.Cookie) (string, error) {
 	return id, nil
 }
 
-func Check(r *http.Request) bool {
-	_, err := GetID(r)
-	return err == nil
-}
+//func Check(r *http.Request) bool {
+//	_, err := GetID(r)
+//	return err == nil
+//}
 
 func generateRandom(size int) ([]byte, error) {
 	b := make([]byte, size)

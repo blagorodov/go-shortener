@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/blagorodov/go-shortener/internal/config"
-	"github.com/blagorodov/go-shortener/internal/cookies"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
@@ -107,13 +106,8 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service, userI
 	return result, resultErr
 }
 
-func GetURLs(ctx context.Context, r *http.Request, s service.Service) (models.AllResponseList, error) {
-	userID, err := cookies.GetID(r)
-	urls, errURLs := s.GetURLs(ctx, userID)
-	if errURLs != nil {
-		err = errURLs
-	}
-	return urls, err
+func GetURLs(ctx context.Context, s service.Service, userID string) (models.AllResponseList, error) {
+	return s.GetURLs(ctx, userID)
 }
 
 func parseOne(r *http.Request) (string, error) {

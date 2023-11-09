@@ -17,13 +17,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("ShortenOne Handler")
 
-		cookie, _ := r.Cookie("token")
-		if !cookies.Check(r) {
-			cookie = cookies.New()
-			http.SetCookie(w, cookie)
-		}
-
-		userID, _ := cookies.GetIDCookie(cookie)
+		userID, _ := cookies.GetID(w, r)
 
 		url, err := controllers.ShortenOne(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
@@ -61,13 +55,7 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 		fmt.Println("ShortenBatch handler")
 		fmt.Println(r.Header)
 
-		cookie, _ := r.Cookie("token")
-		if !cookies.Check(r) {
-			cookie = cookies.New()
-			http.SetCookie(w, cookie)
-		}
-
-		userID, _ := cookies.GetIDCookie(cookie)
+		userID, _ := cookies.GetID(w, r)
 
 		urls, err := controllers.ShortenBatch(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
@@ -138,7 +126,9 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 		//	return
 		//}
 
-		urls, err := controllers.GetURLs(ctx, r, s)
+		userID, _ := cookies.GetID(w, r)
+
+		urls, err := controllers.GetURLs(ctx, s, userID)
 		if err != nil {
 			fmt.Println(err)
 		}
