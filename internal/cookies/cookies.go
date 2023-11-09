@@ -31,8 +31,6 @@ func New() *http.Cookie {
 }
 
 func GetID(w http.ResponseWriter, r *http.Request) (string, error) {
-	fmt.Println("GetID:")
-
 	var token string
 	c, err := r.Cookie("token")
 	if err != nil {
@@ -45,10 +43,7 @@ func GetID(w http.ResponseWriter, r *http.Request) (string, error) {
 		token = cookie.Value
 		http.SetCookie(w, cookie)
 		w.Header().Set("Authorization", token)
-		//return "", nil
 	}
-	fmt.Println("token:")
-	fmt.Println(token)
 	return GetIDToken(token)
 }
 

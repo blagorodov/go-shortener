@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/blagorodov/go-shortener/internal/controllers"
 	"github.com/blagorodov/go-shortener/internal/cookies"
 	"github.com/blagorodov/go-shortener/internal/errs"
@@ -15,8 +14,6 @@ import (
 // ShortenOne Обработчик POST /api/shorten
 func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("ShortenOne Handler")
-
 		userID, _ := cookies.GetID(w, r)
 
 		url, err := controllers.ShortenOne(ctx, r, s, userID)
@@ -52,9 +49,6 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 // ShortenBatch Обработчик POST /api/shorten/batch
 func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("ShortenBatch handler")
-		fmt.Println(r.Header)
-
 		userID, _ := cookies.GetID(w, r)
 
 		urls, err := controllers.ShortenBatch(ctx, r, s, userID)
@@ -115,23 +109,11 @@ func PingDB(ctx context.Context, s service.Service) http.HandlerFunc {
 // GetUserURLs Список сокращений пользователя
 func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("GetUserURLs handler")
-		fmt.Println(r.Header)
-
 		w.Header().Set("Content-Type", "application/json")
-
-		//if !cookies.Check(r) {
-		//	w.Header().Set("Content-Type", "application/json")
-		//	w.WriteHeader(http.StatusUnauthorized)
-		//	return
-		//}
 
 		userID, _ := cookies.GetID(w, r)
 
-		urls, err := controllers.GetURLs(ctx, s, userID)
-		if err != nil {
-			fmt.Println(err)
-		}
+		urls, _ := controllers.GetURLs(ctx, s, userID)
 
 		result, err := json.Marshal(urls)
 
