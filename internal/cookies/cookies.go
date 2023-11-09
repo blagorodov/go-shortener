@@ -35,6 +35,8 @@ func GetID(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("GetID cookie:")
+	fmt.Println(c)
 	return GetIDCookie(c)
 }
 
