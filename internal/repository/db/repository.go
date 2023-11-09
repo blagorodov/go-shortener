@@ -142,13 +142,13 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 	}
 
 	for rows.Next() {
-		var key, link, userId string
-		err = rows.Scan(&key, &link, &userId)
+		var key, link, userID string
+		err = rows.Scan(&key, &link, &userID)
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Printf("%s => %s (%s)\n", key, link, userId)
+		fmt.Printf("%s => %s (%s)\n", key, link, userID)
 
 		parts := []string{config.Options.BaseURL, key}
 		shortURL := strings.Join(parts, `/`)
