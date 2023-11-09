@@ -58,6 +58,9 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 // ShortenBatch Обработчик POST /api/shorten/batch
 func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("ShortenBatch handler")
+		fmt.Println(r.Header)
+
 		cookie, _ := r.Cookie("token")
 		if !cookies.Check(r) {
 			cookie = cookies.New()
@@ -124,6 +127,9 @@ func PingDB(ctx context.Context, s service.Service) http.HandlerFunc {
 // GetUserURLs Список сокращений пользователя
 func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("GetUserURLs handler")
+		fmt.Println(r.Header)
+
 		w.Header().Set("Content-Type", "application/json")
 
 		//if !cookies.Check(r) {
