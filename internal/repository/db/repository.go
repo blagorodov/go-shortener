@@ -8,6 +8,8 @@ import (
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/utils"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
 	"sync"
 	"time"
@@ -22,6 +24,7 @@ var _ def.Repository = (*Repository)(nil)
 type Repository struct {
 	m          sync.RWMutex
 	connection *sql.DB
+	pool       *pgxpool.Pool
 }
 
 func NewRepository(ctx context.Context) (*Repository, error) {
@@ -50,8 +53,11 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 		return nil, err
 	}
 
+	pool, err := pgxpool.New(ctx, config.Options.DBDataSource)
+
 	return &Repository{
 		connection: db,
+		pool:       pool,
 	}, nil
 }
 
@@ -107,7 +113,7 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 func (r *Repository) Put(ctx context.Context, key, url, userID string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
-	if _, err := r.connection.ExecContext(ctx, "INSERT INTO links(key, link, user_id) VALUES($1, $2, $3)", key, url, userID); err != nil {
+	if _, err := r.pool.Exec(ctx, "INSERT INTO links(key, link, user_id) VALUES($1, $2, $3)", key, url, userID); err != nil {
 		return err
 	}
 	return nil
@@ -117,6 +123,7 @@ func (r *Repository) Destroy() error {
 	if err := r.connection.Close(); err != nil {
 		return err
 	}
+	r.pool.Close()
 	return nil
 }
 
@@ -131,12 +138,12 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 	r.m.RLock()
 	defer r.m.RUnlock()
 
-	var rows *sql.Rows
+	var rows pgx.Rows
 	var err error
 	if userID != "" {
-		rows, err = r.connection.QueryContext(ctx, "SELECT key, link, user_id FROM links WHERE user_id = $1", userID)
+		rows, err = r.pool.Query(ctx, "SELECT key, link, user_id FROM links WHERE user_id = $1", userID)
 	} else {
-		rows, err = r.connection.QueryContext(ctx, "SELECT key, link, user_id FROM links")
+		rows, err = r.pool.Query(ctx, "SELECT key, link, user_id FROM links")
 	}
 	if err != nil {
 		return nil, err
@@ -176,9 +183,7 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 		// ToDo Need to escape strings!
 		list = append(list, fmt.Sprintf("'%s'", url))
 	}
-	fmt.Println(strings.Join(list, ","))
-	fmt.Println(userID)
-	_, err := r.connection.ExecContext(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
+	_, err := r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
 	if err != nil {
 		fmt.Println(err)
 	}
