@@ -171,6 +171,7 @@ func parseDelete(r *http.Request) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+		fmt.Printf("parseDelete: %x\n", buf.Bytes())
 		if err = json.Unmarshal(buf.Bytes(), &list); err != nil {
 			return nil, err
 		}
