@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/controllers"
 	"github.com/blagorodov/go-shortener/internal/cookies"
 	"github.com/blagorodov/go-shortener/internal/errs"
@@ -143,9 +144,10 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 
 func Delete(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := cookies.GetID(w, r)
+		userID, err := cookies.GetID(w, r)
+		fmt.Println(err)
 
-		err := controllers.Delete(ctx, r, s, userID)
+		err = controllers.Delete(ctx, r, s, userID)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

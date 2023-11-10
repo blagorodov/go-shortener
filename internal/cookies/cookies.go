@@ -60,6 +60,9 @@ func GetIDToken(token string) (string, error) {
 	h.Write([]byte(id))
 	dst := h.Sum(nil)
 
+	fmt.Printf("%x\n", key)
+	fmt.Printf("%x\n", dst)
+
 	if !hmac.Equal(dst, key) {
 		return "", errors.New("wrong token")
 	}

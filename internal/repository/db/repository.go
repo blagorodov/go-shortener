@@ -176,6 +176,10 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 		// ToDo Need to escape strings!
 		list = append(list, fmt.Sprintf("'%s'", url))
 	}
-	_, err := r.connection.ExecContext(ctx, "DELETE FROM links WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
-	fmt.Println(err)
+	fmt.Println(strings.Join(list, ","))
+	fmt.Println(userID)
+	_, err := r.connection.ExecContext(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
