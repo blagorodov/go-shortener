@@ -13,4 +13,5 @@ type Repository interface {
 	PingDB(ctx context.Context) error
 	Destroy() error
 	GetURLs(ctx context.Context, userID string) (models.AllResponseList, error)
+	Delete(ctx context.Context, urls []string, userID string) error
 }

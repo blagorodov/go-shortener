@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/utils"
@@ -35,6 +36,11 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 	}
 
 	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id character varying(50) COLLATE pg_catalog.\"default\""
+	if _, err = db.ExecContext(ctx, q); err != nil {
+		return nil, err
+	}
+
+	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE"
 	if _, err = db.ExecContext(ctx, q); err != nil {
 		return nil, err
 	}
@@ -72,7 +78,7 @@ func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var url string
-	err := r.connection.QueryRowContext(ctx, "SELECT link FROM links WHERE key = $1", key).Scan(&url)
+	err := r.connection.QueryRowContext(ctx, "SELECT link FROM links WHERE key = $1 AND is_deleted = FALSE", key).Scan(&url)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", errors.New(errs.ErrKeyNotFound)
 	}
@@ -157,4 +163,18 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 	}
 
 	return result, nil
+}
+
+func (r *Repository) Delete(ctx context.Context, urls []string, userID string) error {
+	go deleteURLs(r, ctx, urls, userID)
+	return nil
+}
+
+func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string) {
+	list := make([]string, 0, len(urls))
+	for _, url := range urls {
+		list = append(list, fmt.Sprintf("'%s'", url))
+	}
+	_, err := r.connection.QueryContext(ctx, "DELETE FROM links WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
+	panic(err)
 }

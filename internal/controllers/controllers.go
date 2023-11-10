@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/models"
@@ -110,6 +111,20 @@ func GetURLs(ctx context.Context, s service.Service, userID string) (models.AllR
 	return s.GetURLs(ctx, userID)
 }
 
+func Delete(ctx context.Context, r *http.Request, s service.Service, userID string) error {
+	urls, err := parseDelete(r)
+	fmt.Println(urls)
+	if err != nil {
+		return err
+	}
+
+	if len(urls) == 0 {
+		return nil
+	}
+
+	return s.Delete(ctx, urls, userID)
+}
+
 func parseOne(r *http.Request) (string, error) {
 	if r.Header.Get("Content-Type") == "application/json" {
 		var request models.ShortenRequest
@@ -147,20 +162,20 @@ func parseBatch(r *http.Request) (models.BatchRequestList, error) {
 	return nil, nil
 }
 
-func parseLogin(r *http.Request) (*models.LoginRequest, error) {
+func parseDelete(r *http.Request) ([]string, error) {
 	if r.Header.Get("Content-Type") == "application/json" {
+		var list []string
 		var buf bytes.Buffer
-		var result models.LoginRequest
 
 		_, err := buf.ReadFrom(r.Body)
 		if err != nil {
 			return nil, err
 		}
-		if err = json.Unmarshal(buf.Bytes(), &result); err != nil {
+		if err = json.Unmarshal(buf.Bytes(), &list); err != nil {
 			return nil, err
 		}
 
-		return &result, nil
+		return list, nil
 	}
 	return nil, nil
 }

@@ -78,3 +78,7 @@ func (r *Repository) Destroy() error {
 func (r *Repository) GetURLs(_ context.Context, _ string) (models.AllResponseList, error) {
 	return nil, nil
 }
+
+func (r *Repository) Delete(_ context.Context, _ []string, _ string) error {
+	return nil
+}

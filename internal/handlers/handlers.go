@@ -9,6 +9,7 @@ import (
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"net/http"
+	"strings"
 )
 
 // ShortenOne Обработчик POST /api/shorten
@@ -86,7 +87,11 @@ func Get(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url, err := controllers.Get(ctx, r, s)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			if strings.Compare(err.Error(), errs.ErrKeyNotFound) == 0 {
+				w.WriteHeader(http.StatusGone)
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+			}
 			return
 		}
 		w.Header().Set(`Location`, url)
@@ -133,5 +138,20 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 		if err != nil {
 			return
 		}
+	}
+}
+
+func Delete(ctx context.Context, s service.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, _ := cookies.GetID(w, r)
+
+		err := controllers.Delete(ctx, r, s, userID)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
 	}
 }

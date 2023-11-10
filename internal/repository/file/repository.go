@@ -78,6 +78,10 @@ func (r *Repository) GetURLs(_ context.Context, _ string) (models.AllResponseLis
 	return nil, nil
 }
 
+func (r *Repository) Delete(_ context.Context, _ []string, _ string) error {
+	return nil
+}
+
 // LoadFromFile Загрузить список ссылок из файла хранилища
 func loadFromFile() ([]ShortenURL, error) {
 	c, err := newConsumer(config.Options.URLDBPath)

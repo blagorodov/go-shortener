@@ -31,6 +31,7 @@ func NewServer(ctx context.Context, service service.Service) *Server {
 	s.router.Post("/api/shorten", handlers.ShortenOne(ctx, s.service))
 	s.router.Post("/api/shorten/batch", handlers.ShortenBatch(ctx, s.service))
 	s.router.Get("/api/user/urls", handlers.GetUserURLs(ctx, s.service))
+	s.router.Delete("/api/user/urls", handlers.Delete(ctx, s.service))
 	return &s
 }
 

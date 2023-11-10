@@ -12,4 +12,5 @@ type Service interface {
 	Put(ctx context.Context, key, url, userID string) error
 	PingDB(ctx context.Context) error
 	GetURLs(ctx context.Context, userID string) (models.AllResponseList, error)
+	Delete(ctx context.Context, urls []string, userID string) error
 }
