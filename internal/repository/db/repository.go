@@ -177,5 +177,5 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 		list = append(list, fmt.Sprintf("'%s'", url))
 	}
 	_, err := r.connection.ExecContext(ctx, "DELETE FROM links WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
-	panic(err)
+	fmt.Println(err)
 }
