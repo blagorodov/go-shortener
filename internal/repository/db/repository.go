@@ -54,6 +54,9 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 	}
 
 	pool, err := pgxpool.New(ctx, config.Options.DBDataSource)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Repository{
 		connection: db,
@@ -179,6 +182,7 @@ func (r *Repository) Delete(ctx context.Context, urls []string, userID string) e
 
 func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string) {
 	list := make([]string, 0, len(urls))
+	// ToDo rewrite with Batch!
 	for _, url := range urls {
 		// ToDo Need to escape strings!
 		list = append(list, fmt.Sprintf("'%s'", url))
