@@ -22,45 +22,38 @@ import (
 var _ def.Repository = (*Repository)(nil)
 
 type Repository struct {
-	m          sync.RWMutex
-	connection *sql.DB
-	pool       *pgxpool.Pool
+	m    sync.RWMutex
+	pool *pgxpool.Pool
 }
 
 func NewRepository(ctx context.Context) (*Repository, error) {
-	db, err := sql.Open("pgx", config.Options.DBDataSource)
-	if err != nil {
-		return nil, err
-	}
-
-	q := "CREATE TABLE IF NOT EXISTS public.links(key character varying(50) COLLATE pg_catalog.\"default\", link character varying(255) COLLATE pg_catalog.\"default\", CONSTRAINT links_pkey PRIMARY KEY (key))"
-	if _, err = db.ExecContext(ctx, q); err != nil {
-		return nil, err
-	}
-
-	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id character varying(50) COLLATE pg_catalog.\"default\""
-	if _, err = db.ExecContext(ctx, q); err != nil {
-		return nil, err
-	}
-
-	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE"
-	if _, err = db.ExecContext(ctx, q); err != nil {
-		return nil, err
-	}
-
-	q = "CREATE UNIQUE INDEX IF NOT EXISTS link_unique ON public.links(link)"
-	if _, err = db.ExecContext(ctx, q); err != nil {
-		return nil, err
-	}
-
 	pool, err := pgxpool.New(ctx, config.Options.DBDataSource)
 	if err != nil {
 		return nil, err
 	}
 
+	q := "CREATE TABLE IF NOT EXISTS public.links(key character varying(50) COLLATE pg_catalog.\"default\", link character varying(255) COLLATE pg_catalog.\"default\", CONSTRAINT links_pkey PRIMARY KEY (key))"
+	if _, err = pool.Exec(ctx, q); err != nil {
+		return nil, err
+	}
+
+	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS user_id character varying(50) COLLATE pg_catalog.\"default\""
+	if _, err = pool.Exec(ctx, q); err != nil {
+		return nil, err
+	}
+
+	q = "ALTER TABLE public.links ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE"
+	if _, err = pool.Exec(ctx, q); err != nil {
+		return nil, err
+	}
+
+	q = "CREATE UNIQUE INDEX IF NOT EXISTS link_unique ON public.links(link)"
+	if _, err = pool.Exec(ctx, q); err != nil {
+		return nil, err
+	}
+
 	return &Repository{
-		connection: db,
-		pool:       pool,
+		pool: pool,
 	}, nil
 }
 
@@ -71,11 +64,14 @@ func (r *Repository) NewKey(ctx context.Context) (string, error) {
 	var key, dbKey string
 	for {
 		key = utils.GenRand(8)
-		err := r.connection.QueryRowContext(ctx, "SELECT key FROM links WHERE key = $1", key).Scan(&dbKey)
+		rows, err := r.pool.Query(ctx, "SELECT key FROM links WHERE key = $1", key)
 		if errors.Is(err, sql.ErrNoRows) {
 			break
 		}
 		if err != nil {
+			return "", err
+		}
+		if err = rows.Scan(&dbKey); err != nil {
 			return "", err
 		}
 	}
@@ -87,11 +83,15 @@ func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var url string
-	err := r.connection.QueryRowContext(ctx, "SELECT link FROM links WHERE key = $1 AND is_deleted = FALSE", key).Scan(&url)
+	rows, err := r.pool.Query(ctx, "SELECT link FROM links WHERE key = $1 AND is_deleted = FALSE", key)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", errors.New(errs.ErrKeyNotFound)
 	}
 	if err != nil {
+		return "", err
+	}
+
+	if err = rows.Scan(&url); err != nil {
 		return "", err
 	}
 
@@ -102,11 +102,15 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var key string
-	err := r.connection.QueryRowContext(ctx, "SELECT key FROM links WHERE link = $1", url).Scan(&key)
+	rows, err := r.pool.Query(ctx, "SELECT key FROM links WHERE link = $1", url)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", errors.New(errs.ErrURLNotFound)
 	}
 	if err != nil {
+		return "", err
+	}
+
+	if err = rows.Scan(&key); err != nil {
 		return "", err
 	}
 
@@ -123,9 +127,6 @@ func (r *Repository) Put(ctx context.Context, key, url, userID string) error {
 }
 
 func (r *Repository) Destroy() error {
-	if err := r.connection.Close(); err != nil {
-		return err
-	}
 	r.pool.Close()
 	return nil
 }
@@ -133,7 +134,7 @@ func (r *Repository) Destroy() error {
 func (r *Repository) PingDB(ctx context.Context) error {
 	dbCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	return r.connection.PingContext(dbCtx)
+	return r.pool.Ping(dbCtx)
 }
 
 func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResponseList, error) {
