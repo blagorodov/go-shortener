@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/errs"
@@ -60,22 +59,13 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 func (r *Repository) NewKey(ctx context.Context) (string, error) {
 	r.m.Lock()
 	defer r.m.Unlock()
-
 	var key, dbKey string
 	for {
 		key = utils.GenRand(8)
-		rows, err := r.pool.Query(ctx, "SELECT key FROM links WHERE key = $1", key)
-		if errors.Is(err, sql.ErrNoRows) {
+		if err := r.pool.QueryRow(ctx, "SELECT key FROM links WHERE key = $1", key).Scan(&dbKey); err != nil {
 			break
 		}
-		if err != nil {
-			return "", err
-		}
-		if err = rows.Scan(&dbKey); err != nil {
-			return "", err
-		}
 	}
-
 	return key, nil
 }
 
@@ -83,16 +73,11 @@ func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var url string
-	rows, err := r.pool.Query(ctx, "SELECT link FROM links WHERE key = $1 AND is_deleted = FALSE", key)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New(errs.ErrKeyNotFound)
-	}
-	if err != nil {
-		return "", err
-	}
 
-	if err = rows.Scan(&url); err != nil {
-		return "", err
+	row := r.pool.QueryRow(ctx, "SELECT link FROM links WHERE key = $1 AND is_deleted = FALSE", key)
+	err := row.Scan(&url)
+	if err != nil {
+		return "", errors.New(errs.ErrKeyNotFound)
 	}
 
 	return url, nil
@@ -102,16 +87,11 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var key string
-	rows, err := r.pool.Query(ctx, "SELECT key FROM links WHERE link = $1", url)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", errors.New(errs.ErrURLNotFound)
-	}
-	if err != nil {
-		return "", err
-	}
 
-	if err = rows.Scan(&key); err != nil {
-		return "", err
+	row := r.pool.QueryRow(ctx, "SELECT key FROM links WHERE link = $1", url)
+	err := row.Scan(&key)
+	if err != nil {
+		return "", errors.New(errs.ErrKeyNotFound)
 	}
 
 	return key, nil

@@ -21,6 +21,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 		url, err := controllers.ShortenOne(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println(err)
 			return
 		}
 
