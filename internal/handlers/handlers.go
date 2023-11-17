@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"github.com/blagorodov/go-shortener/internal/auth"
 	"github.com/blagorodov/go-shortener/internal/controllers"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/logger"
@@ -17,7 +18,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Log("ShortenOne")
 
-		userID := r.Context().Value("userID").(string)
+		userID := r.Context().Value(auth.ContextKey).(string)
 
 		url, err := controllers.ShortenOne(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
@@ -54,7 +55,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 // ShortenBatch Обработчик POST /api/shorten/batch
 func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID := r.Context().Value("userID").(string)
+		userID := r.Context().Value(auth.ContextKey).(string)
 
 		urls, err := controllers.ShortenBatch(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
@@ -120,7 +121,7 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		userID := r.Context().Value("userID").(string)
+		userID := r.Context().Value(auth.ContextKey).(string)
 
 		urls, _ := controllers.GetURLs(ctx, s, userID)
 
@@ -147,7 +148,7 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 
 func Delete(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID := r.Context().Value("userID").(string)
+		userID := r.Context().Value(auth.ContextKey).(string)
 
 		err := controllers.Delete(ctx, r, s, userID)
 		if err != nil {
