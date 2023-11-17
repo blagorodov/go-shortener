@@ -3,10 +3,9 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/blagorodov/go-shortener/internal/controllers"
-	"github.com/blagorodov/go-shortener/internal/cookies"
 	"github.com/blagorodov/go-shortener/internal/errs"
+	"github.com/blagorodov/go-shortener/internal/logger"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"net/http"
@@ -16,12 +15,15 @@ import (
 // ShortenOne Обработчик POST /api/shorten
 func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := cookies.GetID(w, r)
+		logger.Log("ShortenOne")
+
+		userID := r.Context().Value("userID").(string)
 
 		url, err := controllers.ShortenOne(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Println(err)
+			logger.Log("Error when controller.ShortenOne")
+			logger.Log(err)
 			return
 		}
 
@@ -52,7 +54,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 // ShortenBatch Обработчик POST /api/shorten/batch
 func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := cookies.GetID(w, r)
+		userID := r.Context().Value("userID").(string)
 
 		urls, err := controllers.ShortenBatch(ctx, r, s, userID)
 		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
@@ -118,7 +120,7 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		userID, _ := cookies.GetID(w, r)
+		userID := r.Context().Value("userID").(string)
 
 		urls, _ := controllers.GetURLs(ctx, s, userID)
 
@@ -145,11 +147,9 @@ func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
 
 func Delete(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := cookies.GetID(w, r)
-		fmt.Println(err)
+		userID := r.Context().Value("userID").(string)
 
-		err = controllers.Delete(ctx, r, s, userID)
-
+		err := controllers.Delete(ctx, r, s, userID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/errs"
+	"github.com/blagorodov/go-shortener/internal/logger"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"github.com/go-chi/chi/v5"
@@ -112,8 +113,9 @@ func GetURLs(ctx context.Context, s service.Service, userID string) (models.AllR
 }
 
 func Delete(ctx context.Context, r *http.Request, s service.Service, userID string) error {
+	logger.Log("Delete")
 	urls, err := parseDelete(r)
-	fmt.Println(urls)
+	logger.Log(urls)
 	if err != nil {
 		return err
 	}

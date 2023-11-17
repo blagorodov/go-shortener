@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/logger"
 	"github.com/blagorodov/go-shortener/internal/repository/memory"
@@ -99,7 +98,6 @@ func TestRouter(t *testing.T) {
 				route = route + s
 				requestBody = ""
 			}
-			fmt.Println(route)
 			resp, respBody := testRequest(t, ts, tc.method, tc.contentType, route, strings.NewReader(requestBody))
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode, "Код ответа не совпадает с ожидаемым")

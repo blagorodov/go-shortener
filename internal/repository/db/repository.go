@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/errs"
+	"github.com/blagorodov/go-shortener/internal/logger"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/utils"
 	"github.com/jackc/pgx/v5"
@@ -162,6 +163,8 @@ func (r *Repository) Delete(ctx context.Context, urls []string, userID string) e
 }
 
 func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string) {
+	logger.Log("deleteURLs")
+
 	list := make([]string, 0, len(urls))
 	// ToDo rewrite with Batch!
 	for _, url := range urls {
@@ -170,6 +173,12 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 	}
 	_, err := r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
 	if err != nil {
-		fmt.Println(err)
+		logger.Log("Error when r.pool.Exec")
+		logger.Log(err)
+	}
+
+	rows, _ := r.pool.Query(ctx, "SELECT * FROM links WHERE is_deleted = FALSE and user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
+	if rows.Next() {
+		logger.Log("There is undeleted links!")
 	}
 }
