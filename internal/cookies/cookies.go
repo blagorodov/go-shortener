@@ -14,7 +14,10 @@ import (
 )
 
 var hashKey = []byte("secrethashkey")
-var ContextKey = "userID"
+
+type key string
+
+const ContextKey key = "userID"
 
 func New() *http.Cookie {
 	id := uuid.NewString()

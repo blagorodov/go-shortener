@@ -171,14 +171,27 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 		// ToDo Need to escape strings!
 		list = append(list, fmt.Sprintf("'%s'", url))
 	}
-	_, err := r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
+
+	var cnt int
+	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE user_id = $1 AND key in ($2)", userID, strings.Join(list, ","))
+	err := row.Scan(&cnt)
+	if err != nil {
+		logger.Log("Error when getting count before delete")
+		logger.Log(err)
+	}
+
+	_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
 	if err != nil {
 		logger.Log("Error when r.pool.Exec")
 		logger.Log(err)
 	}
+	logger.Log("Finished deleting")
 
-	rows, _ := r.pool.Query(ctx, "SELECT * FROM links WHERE is_deleted = FALSE and user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
-	if rows.Next() {
-		logger.Log("There is undeleted links!")
+	row = r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE user_id = $1 AND key in ($2)", userID, strings.Join(list, ","))
+	err = row.Scan(&cnt)
+	if err != nil {
+		logger.Log("Error when getting count after delete")
+		logger.Log(err)
 	}
+	logger.Log(fmt.Sprintf("Undeleted links: %d", cnt))
 }
