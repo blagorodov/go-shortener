@@ -10,6 +10,7 @@ import (
 	"github.com/blagorodov/go-shortener/internal/utils"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -167,16 +168,19 @@ func (r *Repository) Delete(ctx context.Context, urls []string, userID string) e
 func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string) {
 	logger.Log("deleteURLs")
 
-	list := make([]string, 0, len(urls))
-	// ToDo rewrite with Batch!
-	for _, url := range urls {
-		// ToDo Need to escape strings!
-		list = append(list, fmt.Sprintf("'%s'", url))
+	links := make([]any, len(urls))
+	for i, e := range urls {
+		links[i] = e
 	}
 
 	var cnt int
-	//	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE user_id = $1 AND key in ($2)", userID, strings.Join(list, ","))
-	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE is_deleted = false and key in ($1)", strings.Join(list, ","))
+	var paramrefs string
+	for i, _ := range urls {
+		paramrefs += `$` + strconv.Itoa(i+1) + `,`
+	}
+	paramrefs = paramrefs[:len(paramrefs)-1] // remove last ","
+
+	row := r.pool.QueryRow(ctx, "SELECT count(*) FROM links WHERE is_deleted = false and key in ("+paramrefs+")", links...)
 	err := row.Scan(&cnt)
 	if err != nil {
 		logger.Log("Error when getting count before delete")
@@ -184,23 +188,10 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 	}
 	logger.Log(fmt.Sprintf("Links to delete: %d", cnt))
 
-	//	_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
-	for _, url := range list {
-		_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE key = $1", url)
-		if err != nil {
-			logger.Log("Error when r.pool.Exec")
-			logger.Log(err)
-		}
-	}
-	//_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE key IN ($1)", strings.Join(list, ","))
-	//if err != nil {
-	//	logger.Log("Error when r.pool.Exec")
-	//	logger.Log(err)
-	//}
+	_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE key IN ("+paramrefs+")", links...)
 	logger.Log("Finished deleting")
 
-	//	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE user_id = $1 AND key in ($2)", userID, strings.Join(list, ","))
-	row = r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE is_deleted = false and key in ($1)", strings.Join(list, ","))
+	row = r.pool.QueryRow(ctx, "SELECT count(*) FROM links WHERE is_deleted = false and key in ("+paramrefs+")", links...)
 	err = row.Scan(&cnt)
 	if err != nil {
 		logger.Log("Error when getting count after delete")
