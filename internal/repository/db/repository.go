@@ -179,6 +179,7 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 		logger.Log("Error when getting count before delete")
 		logger.Log(err)
 	}
+	logger.Log(fmt.Sprintf("Links to delete: %d", cnt))
 
 	_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
 	if err != nil {
