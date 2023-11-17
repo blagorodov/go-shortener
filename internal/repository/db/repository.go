@@ -175,7 +175,7 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 
 	var cnt int
 	var paramrefs string
-	for i, _ := range urls {
+	for i := range urls {
 		paramrefs += `$` + strconv.Itoa(i+1) + `,`
 	}
 	paramrefs = paramrefs[:len(paramrefs)-1] // remove last ","
@@ -189,6 +189,10 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 	logger.Log(fmt.Sprintf("Links to delete: %d", cnt))
 
 	_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE key IN ("+paramrefs+")", links...)
+	if err != nil {
+		logger.Log("Error when deleting")
+		logger.Log(err)
+	}
 	logger.Log("Finished deleting")
 
 	row = r.pool.QueryRow(ctx, "SELECT count(*) FROM links WHERE is_deleted = false and key in ("+paramrefs+")", links...)
