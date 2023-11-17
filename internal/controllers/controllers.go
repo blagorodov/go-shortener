@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/logger"
@@ -173,7 +172,6 @@ func parseDelete(r *http.Request) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		logger.Log(fmt.Sprintf("parseDelete: %x\n", buf.Bytes()))
 		if err = json.Unmarshal(buf.Bytes(), &list); err != nil {
 			return nil, err
 		}

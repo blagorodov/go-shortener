@@ -101,6 +101,7 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 func (r *Repository) Put(ctx context.Context, key, url, userID string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
+	logger.Log(fmt.Sprintf("Put %s (user: %s)", key, userID))
 	if _, err := r.pool.Exec(ctx, "INSERT INTO links(key, link, user_id) VALUES($1, $2, $3)", key, url, userID); err != nil {
 		return err
 	}
@@ -153,6 +154,7 @@ func (r *Repository) GetURLs(ctx context.Context, userID string) (models.AllResp
 		}
 		result = append(result, r)
 	}
+	logger.Log(fmt.Sprintf("GetUrLs %x (user: %s)", result, userID))
 
 	return result, nil
 }
