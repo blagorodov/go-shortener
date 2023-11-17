@@ -176,7 +176,7 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 
 	var cnt int
 	//	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE user_id = $1 AND key in ($2)", userID, strings.Join(list, ","))
-	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE key in ($1)", strings.Join(list, ","))
+	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE is_deleted = false and key in ($1)", strings.Join(list, ","))
 	err := row.Scan(&cnt)
 	if err != nil {
 		logger.Log("Error when getting count before delete")
@@ -185,15 +185,22 @@ func deleteURLs(r *Repository, ctx context.Context, urls []string, userID string
 	logger.Log(fmt.Sprintf("Links to delete: %d", cnt))
 
 	//	_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE user_id = $1 AND key IN ($2)", userID, strings.Join(list, ","))
-	_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE key IN ($1)", strings.Join(list, ","))
-	if err != nil {
-		logger.Log("Error when r.pool.Exec")
-		logger.Log(err)
+	for _, url := range list {
+		_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE key = $1", url)
+		if err != nil {
+			logger.Log("Error when r.pool.Exec")
+			logger.Log(err)
+		}
 	}
+	//_, err = r.pool.Exec(ctx, "UPDATE links SET is_deleted = TRUE WHERE key IN ($1)", strings.Join(list, ","))
+	//if err != nil {
+	//	logger.Log("Error when r.pool.Exec")
+	//	logger.Log(err)
+	//}
 	logger.Log("Finished deleting")
 
 	//	row := r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE user_id = $1 AND key in ($2)", userID, strings.Join(list, ","))
-	row = r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE key in ($1)", strings.Join(list, ","))
+	row = r.pool.QueryRow(ctx, "SELECT count(*) as cnt FROM links WHERE is_deleted = false and key in ($1)", strings.Join(list, ","))
 	err = row.Scan(&cnt)
 	if err != nil {
 		logger.Log("Error when getting count after delete")
