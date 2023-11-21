@@ -21,12 +21,6 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 		logger.Log(fmt.Sprintf("ShortenOne for user %s", userID))
 
 		url, err := controllers.ShortenOne(ctx, r, s, userID)
-		if errors.Is(err, errs.ErrUniqueLinkCode) {
-			w.WriteHeader(http.StatusBadRequest)
-			logger.Log("Error when controller.ShortenOne")
-			logger.Log(err)
-			return
-		}
 
 		var result []byte
 		if r.Header.Get("Content-Type") == "application/json" {
