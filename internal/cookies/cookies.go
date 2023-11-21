@@ -66,11 +66,6 @@ func GetIDToken(token string) (string, error) {
 	return id, nil
 }
 
-//func Check(r *http.Request) bool {
-//	_, err := GetID(r)
-//	return err == nil
-//}
-
 func generateRandom(size int) ([]byte, error) {
 	b := make([]byte, size)
 	if _, err := rand.Read(b); err != nil {

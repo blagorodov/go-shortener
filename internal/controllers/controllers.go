@@ -34,7 +34,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service, userID 
 	}
 
 	if len(url) == 0 {
-		return "", errors.New(errs.ErrEmptyURL)
+		return "", errs.ErrEmptyURL
 	}
 
 	key, err := s.NewKey(ctx)
@@ -50,7 +50,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service, userID 
 		if errKey != nil {
 			return "", errKey
 		}
-		resultErr = errors.New(errs.ErrUniqueLinkCode)
+		resultErr = errs.ErrUniqueLinkCode
 	} else if err != nil {
 		return "", err
 	}
@@ -90,7 +90,7 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service, userI
 			if errKey != nil {
 				return nil, errKey
 			}
-			resultErr = errors.New(errs.ErrUniqueLinkCode)
+			resultErr = errs.ErrUniqueLinkCode
 		} else if err != nil {
 			return nil, err
 		}

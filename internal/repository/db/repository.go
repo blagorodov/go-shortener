@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/errs"
 	"github.com/blagorodov/go-shortener/internal/logger"
@@ -79,7 +78,7 @@ func (r *Repository) Get(ctx context.Context, key string) (string, error) {
 	row := r.pool.QueryRow(ctx, "SELECT link FROM links WHERE key = $1 AND is_deleted = FALSE", key)
 	err := row.Scan(&url)
 	if err != nil {
-		return "", errors.New(errs.ErrKeyNotFound)
+		return "", errs.ErrKeyNotFound
 	}
 
 	return url, nil
@@ -93,7 +92,7 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	row := r.pool.QueryRow(ctx, "SELECT key FROM links WHERE link = $1", url)
 	err := row.Scan(&key)
 	if err != nil {
-		return "", errors.New(errs.ErrKeyNotFound)
+		return "", errs.ErrKeyNotFound
 	}
 
 	return key, nil

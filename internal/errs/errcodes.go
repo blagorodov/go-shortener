@@ -1,7 +1,7 @@
 package errs
 
-const ErrUniqueLinkCode = "unique link violation"
+import "errors"
 
-const ErrEmptyURL = "url is empty"
-const ErrKeyNotFound = "key not found"
-const ErrURLNotFound = "url not found"
+var ErrUniqueLinkCode = errors.New("unique link violation")
+var ErrEmptyURL = errors.New("url is empty")
+var ErrKeyNotFound = errors.New("key not found")

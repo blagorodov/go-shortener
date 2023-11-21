@@ -23,7 +23,6 @@ func loadConfig() Config {
 	flag.StringVar(&o.BaseURL, "b", "http://localhost:8080", "result server name")
 	flag.StringVar(&o.LogPath, "l", "shortener.log", "log file path")
 	flag.StringVar(&o.URLDBPath, "f", "", "url database file path")
-	// export DATABASE_DSN="host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"
 	flag.StringVar(&o.DBDataSource, "d", "", "database data source")
 	flag.Parse()
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/blagorodov/go-shortener/internal/auth"
 	"github.com/blagorodov/go-shortener/internal/controllers"
@@ -11,7 +12,6 @@ import (
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"net/http"
-	"strings"
 )
 
 // ShortenOne Обработчик POST /api/shorten
@@ -21,7 +21,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 		logger.Log(fmt.Sprintf("ShortenOne for user %s", userID))
 
 		url, err := controllers.ShortenOne(ctx, r, s, userID)
-		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
+		if errors.Is(err, errs.ErrUniqueLinkCode) {
 			w.WriteHeader(http.StatusBadRequest)
 			logger.Log("Error when controller.ShortenOne")
 			logger.Log(err)
@@ -40,7 +40,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 		} else {
 			result = []byte(url)
 		}
-		if err != nil && err.Error() == errs.ErrUniqueLinkCode {
+		if errors.Is(err, errs.ErrUniqueLinkCode) {
 			w.WriteHeader(http.StatusConflict)
 		} else {
 			w.WriteHeader(http.StatusCreated)
@@ -60,7 +60,7 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 		logger.Log(fmt.Sprintf("ShortenBatch for user %s", userID))
 
 		urls, err := controllers.ShortenBatch(ctx, r, s, userID)
-		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
+		if errors.Is(err, errs.ErrUniqueLinkCode) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -77,7 +77,7 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 			}
 		}
 
-		if err != nil && err.Error() == errs.ErrUniqueLinkCode {
+		if errors.Is(err, errs.ErrUniqueLinkCode) {
 			w.WriteHeader(http.StatusConflict)
 		} else {
 			w.WriteHeader(http.StatusCreated)
@@ -94,7 +94,7 @@ func Get(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url, err := controllers.Get(ctx, r, s)
 		if err != nil {
-			if strings.Compare(err.Error(), errs.ErrKeyNotFound) == 0 {
+			if errors.Is(err, errs.ErrKeyNotFound) {
 				w.WriteHeader(http.StatusGone)
 			} else {
 				w.WriteHeader(http.StatusBadRequest)
