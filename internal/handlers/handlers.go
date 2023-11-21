@@ -3,8 +3,12 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/blagorodov/go-shortener/internal/auth"
 	"github.com/blagorodov/go-shortener/internal/controllers"
 	"github.com/blagorodov/go-shortener/internal/errs"
+	"github.com/blagorodov/go-shortener/internal/logger"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"net/http"
@@ -13,11 +17,10 @@ import (
 // ShortenOne Обработчик POST /api/shorten
 func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		url, err := controllers.ShortenOne(ctx, r, s)
-		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+		userID := r.Context().Value(auth.ContextKey).(string)
+		logger.Log(fmt.Sprintf("ShortenOne for user %s", userID))
+
+		url, err := controllers.ShortenOne(ctx, r, s, userID)
 
 		var result []byte
 		if r.Header.Get("Content-Type") == "application/json" {
@@ -31,7 +34,7 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 		} else {
 			result = []byte(url)
 		}
-		if err != nil && err.Error() == errs.ErrUniqueLinkCode {
+		if errors.Is(err, errs.ErrUniqueLinkCode) {
 			w.WriteHeader(http.StatusConflict)
 		} else {
 			w.WriteHeader(http.StatusCreated)
@@ -46,8 +49,12 @@ func ShortenOne(ctx context.Context, s service.Service) http.HandlerFunc {
 // ShortenBatch Обработчик POST /api/shorten/batch
 func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		urls, err := controllers.ShortenBatch(ctx, r, s)
-		if err != nil && err.Error() != errs.ErrUniqueLinkCode {
+		userID := r.Context().Value(auth.ContextKey).(string)
+
+		logger.Log(fmt.Sprintf("ShortenBatch for user %s", userID))
+
+		urls, err := controllers.ShortenBatch(ctx, r, s, userID)
+		if errors.Is(err, errs.ErrUniqueLinkCode) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -64,7 +71,7 @@ func ShortenBatch(ctx context.Context, s service.Service) http.HandlerFunc {
 			}
 		}
 
-		if err != nil && err.Error() == errs.ErrUniqueLinkCode {
+		if errors.Is(err, errs.ErrUniqueLinkCode) {
 			w.WriteHeader(http.StatusConflict)
 		} else {
 			w.WriteHeader(http.StatusCreated)
@@ -81,7 +88,11 @@ func Get(ctx context.Context, s service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url, err := controllers.Get(ctx, r, s)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			if errors.Is(err, errs.ErrKeyNotFound) {
+				w.WriteHeader(http.StatusGone)
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+			}
 			return
 		}
 		w.Header().Set(`Location`, url)
@@ -98,5 +109,51 @@ func PingDB(ctx context.Context, s service.Service) http.HandlerFunc {
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
+	}
+}
+
+// GetUserURLs Список сокращений пользователя
+func GetUserURLs(ctx context.Context, s service.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		userID := r.Context().Value(auth.ContextKey).(string)
+		logger.Log(fmt.Sprintf("GetUserURLs for user %s", userID))
+
+		urls, _ := controllers.GetURLs(ctx, s, userID)
+
+		result, err := json.Marshal(urls)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if len(urls) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+
+		_, err = w.Write(result)
+		if err != nil {
+			return
+		}
+	}
+}
+
+func Delete(ctx context.Context, s service.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID := r.Context().Value(auth.ContextKey).(string)
+		logger.Log(fmt.Sprintf("Delete for user %s", userID))
+
+		err := controllers.Delete(ctx, r, s, userID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
 	}
 }

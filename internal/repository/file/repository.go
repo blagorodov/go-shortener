@@ -3,6 +3,7 @@ package file
 import (
 	"context"
 	"github.com/blagorodov/go-shortener/internal/config"
+	"github.com/blagorodov/go-shortener/internal/models"
 	"strconv"
 	"sync"
 
@@ -32,7 +33,7 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 	}
 
 	for _, url := range urls {
-		if err := r.memory.Put(ctx, url.ShortURL, url.OriginalURL); err != nil {
+		if err := r.memory.Put(ctx, url.ShortURL, url.OriginalURL, ""); err != nil {
 			return nil, err
 		}
 	}
@@ -56,10 +57,10 @@ func (r *Repository) GetKey(ctx context.Context, url string) (string, error) {
 	return r.memory.GetKey(ctx, url)
 }
 
-func (r *Repository) Put(ctx context.Context, key, url string) error {
+func (r *Repository) Put(ctx context.Context, key, url, userID string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
-	if err := r.memory.Put(ctx, key, url); err != nil {
+	if err := r.memory.Put(ctx, key, url, userID); err != nil {
 		return err
 	}
 	return saveToFile(key, url)
@@ -70,6 +71,14 @@ func (r *Repository) PingDB(_ context.Context) error {
 }
 
 func (r *Repository) Destroy() error {
+	return nil
+}
+
+func (r *Repository) GetURLs(_ context.Context, _ string) (models.AllResponseList, error) {
+	return nil, nil
+}
+
+func (r *Repository) Delete(_ context.Context, _ []string, _ string) error {
 	return nil
 }
 

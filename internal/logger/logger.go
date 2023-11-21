@@ -54,6 +54,7 @@ func NewLogger() (*zap.Logger, error) {
 		EncoderConfig: encCfg,
 		OutputPaths: []string{
 			config.Options.LogPath,
+			"stdout",
 		},
 	}
 
@@ -86,4 +87,8 @@ func WithLogging(h http.Handler) http.Handler {
 		)
 	}
 	return http.HandlerFunc(logFn)
+}
+
+func Log(s any) {
+	sugar.Infoln(s)
 }

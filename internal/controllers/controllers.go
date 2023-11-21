@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/blagorodov/go-shortener/internal/config"
 	"github.com/blagorodov/go-shortener/internal/errs"
+	"github.com/blagorodov/go-shortener/internal/logger"
 	"github.com/blagorodov/go-shortener/internal/models"
 	"github.com/blagorodov/go-shortener/internal/service"
 	"github.com/go-chi/chi/v5"
@@ -23,7 +24,7 @@ func Get(ctx context.Context, r *http.Request, s service.Service) (string, error
 }
 
 // ShortenOne Контроллер POST /api/shorten
-func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string, error) {
+func ShortenOne(ctx context.Context, r *http.Request, s service.Service, userID string) (string, error) {
 	var url string
 	var resultErr error
 
@@ -33,7 +34,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 	}
 
 	if len(url) == 0 {
-		return "", errors.New(errs.ErrEmptyURL)
+		return "", errs.ErrEmptyURL
 	}
 
 	key, err := s.NewKey(ctx)
@@ -41,7 +42,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 		return "", err
 	}
 
-	err = s.Put(ctx, key, url)
+	err = s.Put(ctx, key, url, userID)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 		var errKey error
@@ -49,7 +50,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 		if errKey != nil {
 			return "", errKey
 		}
-		resultErr = errors.New(errs.ErrUniqueLinkCode)
+		resultErr = errs.ErrUniqueLinkCode
 	} else if err != nil {
 		return "", err
 	}
@@ -61,7 +62,7 @@ func ShortenOne(ctx context.Context, r *http.Request, s service.Service) (string
 }
 
 // ShortenBatch Контроллер POST /api/shorten/batch
-func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (models.BatchResponseList, error) {
+func ShortenBatch(ctx context.Context, r *http.Request, s service.Service, userID string) (models.BatchResponseList, error) {
 	var urls models.BatchRequestList
 	var result models.BatchResponseList
 	var resultErr error
@@ -81,7 +82,7 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 			return nil, err
 		}
 
-		err = s.Put(ctx, key, item.OriginalURL)
+		err = s.Put(ctx, key, item.OriginalURL, userID)
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			var errKey error
@@ -89,7 +90,7 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 			if errKey != nil {
 				return nil, errKey
 			}
-			resultErr = errors.New(errs.ErrUniqueLinkCode)
+			resultErr = errs.ErrUniqueLinkCode
 		} else if err != nil {
 			return nil, err
 		}
@@ -104,6 +105,25 @@ func ShortenBatch(ctx context.Context, r *http.Request, s service.Service) (mode
 	}
 
 	return result, resultErr
+}
+
+func GetURLs(ctx context.Context, s service.Service, userID string) (models.AllResponseList, error) {
+	return s.GetURLs(ctx, userID)
+}
+
+func Delete(ctx context.Context, r *http.Request, s service.Service, userID string) error {
+	logger.Log("Delete")
+	urls, err := parseDelete(r)
+	logger.Log(urls)
+	if err != nil {
+		return err
+	}
+
+	if len(urls) == 0 {
+		return nil
+	}
+
+	return s.Delete(ctx, urls, userID)
 }
 
 func parseOne(r *http.Request) (string, error) {
@@ -128,6 +148,24 @@ func parseOne(r *http.Request) (string, error) {
 func parseBatch(r *http.Request) (models.BatchRequestList, error) {
 	if r.Header.Get("Content-Type") == "application/json" {
 		var list models.BatchRequestList
+		var buf bytes.Buffer
+
+		_, err := buf.ReadFrom(r.Body)
+		if err != nil {
+			return nil, err
+		}
+		if err = json.Unmarshal(buf.Bytes(), &list); err != nil {
+			return nil, err
+		}
+
+		return list, nil
+	}
+	return nil, nil
+}
+
+func parseDelete(r *http.Request) ([]string, error) {
+	if r.Header.Get("Content-Type") == "application/json" {
+		var list []string
 		var buf bytes.Buffer
 
 		_, err := buf.ReadFrom(r.Body)

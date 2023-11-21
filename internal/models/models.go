@@ -19,7 +19,22 @@ type (
 		ShortURL      string `json:"short_url"`
 	}
 
+	AllResponse struct {
+		ShortURL    string `json:"short_url"`
+		OriginalURL string `json:"original_url"`
+	}
+
 	BatchRequestList []BatchRequest
 
 	BatchResponseList []BatchResponse
+
+	AllResponseList []AllResponse
+
+	LoginRequest struct {
+		UserID int `json:"user_id"`
+	}
+
+	LoginResponse struct {
+		Token string `json:"token"`
+	}
 )
